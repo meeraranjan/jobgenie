@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5 profile-edit">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-3">Edit Profile</h2>
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                {{ form.headline.label_tag }}
+                {{ form.headline }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.skills.label_tag }}
+                {{ form.skills }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.education.label_tag }}
+                {{ form.education }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.work_experience.label_tag }}
+                {{ form.work_experience }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.links.label_tag }}
+                {{ form.links }}
+            </div>
+
+            <div class="form-check mb-3">
+                {{ form.is_public }}
+                {{ form.is_public.label_tag }}
+            </div>
+
+            <button type="submit" class="btn btn-success mt-3">Save Changes</button>
+            <a href="{% url 'profiles:view_profile' %}" class="btn btn-secondary mt-3 ms-2">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock content %}

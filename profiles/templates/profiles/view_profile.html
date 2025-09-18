@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5 profile-view">
+    <div class="card shadow-sm p-4">
+        <h2 class="mb-3">{{ profile.user.username }}</h2>
+        <h5 class="text-muted mb-3">{{ profile.headline }}</h5>
+
+        <p><strong>Skills:</strong> {{ profile.skills|linebreaksbr }}</p>
+        <p><strong>Education:</strong> {{ profile.education|linebreaksbr }}</p>
+        <p><strong>Work Experience:</strong> {{ profile.work_experience|linebreaksbr }}</p>
+        <p><strong>Links:</strong> {{ profile.links|linebreaksbr }}</p>
+        <p><strong>Profile Visibility:</strong> {{ profile.is_public|yesno:"Public,Private" }}</p>
+
+        <a href="{% url 'profiles:edit_profile' %}" class="btn btn-primary mt-3">Edit Profile</a>
+    </div>
+</div>
+{% endblock content %}

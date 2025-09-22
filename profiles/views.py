@@ -5,6 +5,9 @@ from django.contrib.auth.decorators import login_required
 from .forms import JobSeekerProfileForm
 from .models import JobSeekerProfile
 
+
+#original with login ability
+
 @login_required
 def view_profile(request):
     profile = request.user.jobseekerprofile
@@ -25,7 +28,7 @@ def edit_profile(request):
 
 
 
-#from testing without login ability yet
+# #from testing without login ability yet
 
 
 # from django.contrib.auth.models import User

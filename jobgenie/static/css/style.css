@@ -2,3 +2,15 @@
   background: url("/static/img/background.jpeg") no-repeat fixed;
   background-size: 100% auto;
 }
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+.navbar-brand {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+}
+
+footer a:hover {
+    color: #0d6efd; /* Bootstrap blue on hover */
+}

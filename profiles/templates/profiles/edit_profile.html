@@ -6,6 +6,15 @@
         <h2 class="mb-3">Edit Profile</h2>
         <form method="POST">
             {% csrf_token %}
+            <div class="mb-3">
+                {{ form.first_name.label_tag }}
+                {{ form.first_name }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.last_name.label_tag }}
+                {{ form.last_name }}
+            </div>
 
             <div class="mb-3">
                 {{ form.headline.label_tag }}

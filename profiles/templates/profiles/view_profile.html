@@ -3,16 +3,29 @@
 {% block content %}
 <div class="container my-5 profile-view">
     <div class="card shadow-sm p-4">
-        <h2 class="mb-3">{{ profile.user.username }}</h2>
-        <h5 class="text-muted mb-3">{{ profile.headline }}</h5>
+        {% if profile %}
+           <h2 class="mb-3">
+            {% if profile.user.first_name or profile.user.last_name %}
+                {{ profile.user.first_name }} {{ profile.user.last_name }}
+            {% else %}
+                {{ profile.user.username }}
+            {% endif %}
+            </h2>
+            <h5 class="text-muted mb-3">{{ profile.headline }}</h5>
+            
+            <p><strong>Skills:</strong> {{ profile.skills|linebreaksbr }}</p>
+            <p><strong>Education:</strong> {{ profile.education|linebreaksbr }}</p>
+            <p><strong>Work Experience:</strong> {{ profile.work_experience|linebreaksbr }}</p>
+            <p><strong>Links:</strong> {{ profile.links|linebreaksbr }}</p>
+            <p><strong>Profile Visibility:</strong> {{ profile.is_public|yesno:"Public,Private" }}</p>
 
-        <p><strong>Skills:</strong> {{ profile.skills|linebreaksbr }}</p>
-        <p><strong>Education:</strong> {{ profile.education|linebreaksbr }}</p>
-        <p><strong>Work Experience:</strong> {{ profile.work_experience|linebreaksbr }}</p>
-        <p><strong>Links:</strong> {{ profile.links|linebreaksbr }}</p>
-        <p><strong>Profile Visibility:</strong> {{ profile.is_public|yesno:"Public,Private" }}</p>
-
-        <a href="{% url 'profiles:edit_profile' %}" class="btn btn-primary mt-3">Edit Profile</a>
+            <a href="{% url 'profiles:edit_profile' %}" class="btn btn-primary mt-3">Edit Profile</a>
+        
+        {% else %}
+            <h3 class="mb-3">No profile found</h3>
+            <p>You don’t have a profile yet. Click below to create one.</p>
+            <a href="{% url 'profiles:create_profile' %}" class="btn btn-success mt-3">Create Profile</a>
+        {% endif %}
     </div>
 </div>
 {% endblock content %}

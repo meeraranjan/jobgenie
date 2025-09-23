@@ -20,5 +20,5 @@ class JobSeekerProfile(models.Model):
     is_public = models.BooleanField(default=True)  # privacy
 
     def __str__(self):
-        return f"{self.username} - {self.headline}"
+        return f"{self.user.username} - {self.headline}"
 

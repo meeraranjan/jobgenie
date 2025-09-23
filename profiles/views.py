@@ -42,28 +42,3 @@ def edit_profile(request):
     else:
         form = JobSeekerProfileForm(instance=profile)
     return render(request, 'profiles/edit_profile.html', {'form': form})
-
-
-
-
-# #from testing without login ability yet
-
-
-# from django.contrib.auth.models import User
-
-# def view_profile(request):
-#     user = User.objects.first()  # grab the first user
-#     profile = user.jobseekerprofile
-#     return render(request, 'profiles/view_profile.html', {'profile': profile})
-
-# def edit_profile(request):
-#     user = User.objects.first()  # grab the first user
-#     profile = user.jobseekerprofile
-#     if request.method == 'POST':
-#         form = JobSeekerProfileForm(request.POST, instance=profile)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('profiles:view_profile')
-#     else:
-#         form = JobSeekerProfileForm(instance=profile)
-#     return render(request, 'profiles/edit_profile.html', {'form': form})

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="p-3">
+  <div class="container">
+    <div class="row mt-3">
+      <div class="col mx-auto mb-3">
+        <h2>Open Positions</h2>
+        <hr />
+        <form method="GET">
+          <div class="row g-2">
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">Search</span>
+                <input type="text" class="form-control" name="search"
+                       value="{{ request.GET.search }}" placeholder="Title, skill, or location">
+              </div>
+            </div>
+            <div class="col-auto">
+              <button class="btn bg-dark text-white" type="submit">Search</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="row">
+      {% for job in jobs %}
+        <div class="col-md-4 col-lg-3 mb-3">
+          <div class="card h-100 p-2 pt-3 align-items-center">
+            <h6 class="card-title mb-2 text-muted">{{ job.company_name }}</h6>
+            <h5 class="mb-1">{{ job.title }}</h5>
+            <div class="mb-2 small text-muted">{{ job.location }}</div>
+            <div class="card-body text-center">
+              <div class="mb-2">
+                <span class="badge bg-secondary">{{ job.get_job_type_display }}</span>
+                <span class="badge {% if job.visa_sponsorship == 'YES' %}bg-success{% else %}bg-dark{% endif %}">
+                  {{ job.get_visa_sponsorship_display }}
+                </span>
+              </div>
+
+              {% if job.salary_min or job.salary_max %}
+                <div class="mb-2 small">
+                  ${{ job.salary_min|default:"?" }} – ${{ job.salary_max|default:"?" }}
+                </div>
+              {% endif %}
+
+              <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white">
+                View Details
+              </a>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col">
+          <div class="alert alert-light border">No jobs found.</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

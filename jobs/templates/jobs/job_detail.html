@@ -48,8 +48,29 @@
             <li><strong>Posted:</strong> {{ job.created_at|date:"M j, Y" }}</li>
             <li><strong>Updated:</strong> {{ job.updated_at|date:"M j, Y" }}</li>
           </ul>
-          <div class="mt-3 d-grid">
-            <a href="#" class="btn bg-dark text-white disabled">Apply (stub)</a>
+          
+          <div class="mt-3">
+            {% if user.is_authenticated %}
+              {% if application %}
+                <div class="alert alert-warning">
+                  You already applied to this job.
+                </div>
+                {% if application.note %}
+                  <div class="mb-2">
+                    <strong>Your Note:</strong><br>
+                    <div class="border rounded p-2 bg-light">{{ application.note }}</div>
+                  </div>
+                {% endif %}
+              {% else %}
+                <form method="post" action="{% url 'apply_to_job' job.id %}">
+                  {% csrf_token %}
+                  <textarea name="note" class="form-control mb-2" rows="3" placeholder="Write a short note..."></textarea>
+                  <button type="submit" class="btn bg-dark text-white">Apply</button>
+                </form>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'accounts.login' %}" class="btn bg-dark text-white">Log in to apply</a>
+            {% endif %}
           </div>
         </div>
       </div>

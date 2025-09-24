@@ -38,6 +38,11 @@
                   {{ job.get_visa_sponsorship_display }}
                 </span>
               </div>
+              {% if job.my_application %}
+                <p class="text-success small mb-2">
+                  ✅ Applied on {{ job.my_application.applied_at|date:"M j, Y, g:i a T"}}
+                </p>
+              {% endif %}
 
               {% if job.salary_min or job.salary_max %}
                 <div class="mb-2 small">

@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from recruiters.models import Recruiter
 
 class Job(models.Model):
     JOB_TYPES = [
@@ -18,6 +19,14 @@ class Job(models.Model):
         ('NO', 'No Sponsorship'),
     ]
 
+    recruiter = models.ForeignKey(
+    Recruiter,
+    on_delete=models.CASCADE,
+    related_name="jobs",
+    null=True,
+    blank=True
+)
+    
     title = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255, blank=True, default="")
     skills = models.TextField(help_text="List required skills, separated by commas", blank=True, default="")

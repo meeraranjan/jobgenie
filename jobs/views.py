@@ -1,5 +1,4 @@
-from django.shortcuts import get_object_or_404, redirect
-from django.views.generic import ListView, DetailView
+from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
@@ -8,6 +7,9 @@ import operator
 from django.contrib import messages
 
 from .models import Job, Application
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .forms import JobForm
 from .forms import JobFilterForm
 
 
@@ -100,4 +102,29 @@ def apply_to_job(request, pk):
     else:
         messages.warning(request, "You already applied to this job.")
 
-    return redirect('job_detail', pk=job.pk)
+    return redirect("job_detail", pk=job.pk)
+
+class JobCreateView(LoginRequiredMixin, CreateView):
+    model = Job
+    form_class = JobForm
+    template_name = "jobs/job_form.html"
+
+    def form_valid(self, form):
+        recruiter = getattr(self.request.user, "recruiter_profile", None)
+        if recruiter is None:
+            form.add_error(None, "You must have a recruiter profile to post a job.")
+            return self.form_invalid(form)
+        form.instance.recruiter = recruiter
+        return super().form_valid(form)
+
+class JobUpdateView(LoginRequiredMixin, UpdateView):
+    model = Job
+    form_class = JobForm
+    template_name = "jobs/job_form.html"
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        recruiter = getattr(self.request.user, "recruiter_profile", None)
+        if obj.recruiter != recruiter:
+            raise PermissionError("You can only edit your own jobs.")
+        return obj

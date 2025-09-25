@@ -38,10 +38,27 @@
                   {{ job.get_visa_sponsorship_display }}
                 </span>
               </div>
+
               {% if job.my_application %}
-                <p class="text-success small mb-2">
-                  ✅ Applied on {{ job.my_application.applied_at|date:"M j, Y, g:i a T"}}
-                </p>
+                <div class="small text-success mb-1">
+                  <i class="bi bi-check-square"></i>
+                  Applied on {{ job.my_application.applied_at|date:"M j, Y, g:i a T" }}
+                </div>
+
+                <div class="small mb-2">
+                  <strong>Status:</strong>
+                  <span class="badge
+                    {% if job.my_application.status == 'applied' %} bg-secondary
+                    {% elif job.my_application.status == 'review' %} bg-info text-dark
+                    {% elif job.my_application.status == 'interview' %} bg-warning text-dark
+                    {% elif job.my_application.status == 'offer' %} bg-success
+                    {% elif job.my_application.status == 'closed' %} bg-danger
+                    {% else %} bg-dark
+                    {% endif %}
+                  ">
+                    {{ job.my_application.get_status_display }}
+                  </span>
+                </div>
               {% endif %}
 
               {% if job.salary_min or job.salary_max %}

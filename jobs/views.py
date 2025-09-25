@@ -42,14 +42,16 @@ class JobListView(ListView):
                 Q(skills__icontains=q) |
                 Q(location__icontains=q)
             )
-        
+
         if self.request.user.is_authenticated:
             from .models import Application
             applied = Application.objects.filter(candidate=self.request.user)
             applied_dict = {app.job_id: app for app in applied}
             for job in qs:
                 job.my_application = applied_dict.get(job.id)
+
         return qs
+
 
 @login_required
 @require_POST

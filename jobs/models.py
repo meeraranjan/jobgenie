@@ -27,6 +27,9 @@ class Job(models.Model):
     null=True,
     blank=True
     )
+
+    def get_absolute_url(self):
+        return reverse('job_detail', args=[str(self.pk)])
     
     title = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255, blank=True, default="")
@@ -73,7 +76,3 @@ class Application(models.Model):
 
     def __str__(self):
         return f"Application by {self.candidate} for {self.job}"
-
-    
-    def get_absolute_url(self):
-        return reverse('job_detail', args=[str(self.pk)])

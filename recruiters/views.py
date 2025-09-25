@@ -4,6 +4,9 @@ from django.shortcuts import redirect
 from .models import Recruiter
 from .forms import RecruiterForm
 from jobs.models import Job
+from django.views import View
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 class RecruiterSignupView(LoginRequiredMixin, CreateView):
     model = Recruiter
@@ -31,5 +34,12 @@ class RecruiterDashboardView(LoginRequiredMixin, TemplateView):
         context["recruiter"] = recruiter
         context["jobs"] = Job.objects.filter(recruiter=recruiter).order_by("-created_at")
         return context
+    
+class BecomeRecruiterView(View):
+    @method_decorator(login_required)
+    def get(self, request):
+        if hasattr(request.user, "recruiter_profile"):
+            return redirect("recruiters:dashboard")
+        return redirect("recruiters:signup")
 
 # Create your views here.

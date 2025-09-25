@@ -20,37 +20,30 @@ class JobListView(ListView):
         qs = Job.objects.all().order_by('-created_at')
         g = self.request.GET
 
-        # title
         if g.get('title'):
             qs = qs.filter(title__icontains=g['title'])
 
-        # location
         if g.get('location'):
             qs = qs.filter(location__icontains=g['location'])
 
-        # skills (ANY token)
         if g.get('skills'):
             raw = g['skills'].replace(',', ' ')
             tokens = [t.strip() for t in raw.split() if t.strip()]
             if tokens:
                 qs = qs.filter(reduce(operator.or_, (Q(skills__icontains=t) for t in tokens)))
 
-        # job type
         job_types = g.getlist('job_type')
         if job_types:
             qs = qs.filter(job_type__in=job_types)
 
-        # remote/on-site
         remote_types = g.getlist('remote_type')
         if remote_types:
             qs = qs.filter(remote_type__in=remote_types)
 
-        # visa
         visa = g.get('visa')
         if visa in ('YES', 'NO'):
             qs = qs.filter(visa_sponsorship=visa)
 
-        # salary overlap
         min_salary = g.get('min_salary')
         max_salary = g.get('max_salary')
         if min_salary:
@@ -62,7 +55,10 @@ class JobListView(ListView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['filter_form'] = JobFilterForm(self.request.GET or None)
+        g = self.request.GET
+        ctx['filter_form'] = JobFilterForm(g or None)
+        ctx['selected_remote_types'] = g.getlist('remote_type')
+        ctx['selected_visa'] = g.get('visa', '')
         return ctx
 
 

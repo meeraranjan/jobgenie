@@ -55,7 +55,6 @@ class Job(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.location})"
-<<<<<<< HEAD
 
 class Application(models.Model):
     STATUS_CHOICES = [
@@ -74,8 +73,7 @@ class Application(models.Model):
 
     def __str__(self):
         return f"Application by {self.candidate} for {self.job}"
-=======
+
     
     def get_absolute_url(self):
         return reverse('job_detail', args=[str(self.pk)])
->>>>>>> 62efcc2 (Update Recruiter and Job models and add migrations)

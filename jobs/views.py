@@ -10,6 +10,7 @@ from .models import Job, Application
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import JobForm
+from django.core.exceptions import PermissionDenied
 from .forms import JobFilterForm
 
 
@@ -107,7 +108,7 @@ def apply_to_job(request, pk):
 class JobCreateView(LoginRequiredMixin, CreateView):
     model = Job
     form_class = JobForm
-    template_name = "jobs/job_form.html"
+    template_name = 'jobs/job_form.html'
 
     def form_valid(self, form):
         recruiter = getattr(self.request.user, "recruiter_profile", None)
@@ -116,6 +117,10 @@ class JobCreateView(LoginRequiredMixin, CreateView):
             return self.form_invalid(form)
         form.instance.recruiter = recruiter
         return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
 
 class JobUpdateView(LoginRequiredMixin, UpdateView):
     model = Job
@@ -126,5 +131,6 @@ class JobUpdateView(LoginRequiredMixin, UpdateView):
         obj = super().get_object(queryset)
         recruiter = getattr(self.request.user, "recruiter_profile", None)
         if obj.recruiter != recruiter:
-            raise PermissionError("You can only edit your own jobs.")
+
+            raise PermissionDenied("You can only edit your own jobs.")
         return obj

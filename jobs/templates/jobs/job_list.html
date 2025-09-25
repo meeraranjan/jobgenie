@@ -131,11 +131,13 @@
                   </div>
                 {% endif %}
 
-
                 <div class="mt-auto">
                   <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white">
                     View Details
                   </a>
+                  {% if user.is_authenticated and user.recruiter_profile == job.recruiter %}
+                    <a href="{% url 'job_edit' job.pk %}" class="btn btn-primary">Edit</a>
+                  {% endif %}
                 </div>
               </div>
             </div>
@@ -171,21 +173,6 @@
             </ul>
           </nav>
         {% endif %}
-
-              <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white">
-                View Details
-              </a>
-              {% if user.is_authenticated and user.recruiter_profile == job.recruiter %}
-                  <a href="{% url 'job_edit' job.pk %}" class="btn btn-primary">Edit</a>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      {% empty %}
-        <div class="col">
-          <div class="alert alert-light border">No jobs found.</div>
-        </div>
-      {% endfor %}
     </div>
   </div>
 </div>

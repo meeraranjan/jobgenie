@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jobs', '0003_application'),
+        ('jobs', '0003_job_remote_type_job_jobs_job_job_typ_f6c220_idx_and_more'),
         ('jobs', '0003_job_recruiter'),
     ]
 

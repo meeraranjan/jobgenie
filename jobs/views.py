@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from functools import reduce
 import operator
+from django.contrib import messages
 
 from .models import Job, Application
 from .forms import JobFilterForm
@@ -50,7 +51,11 @@ class JobListView(ListView):
             qs = qs.filter(Q(salary_max__isnull=True) | Q(salary_max__gte=min_salary))
         if max_salary:
             qs = qs.filter(Q(salary_min__isnull=True) | Q(salary_min__lte=max_salary))
-
+        if self.request.user.is_authenticated:
+            applied = Application.objects.filter(candidate=self.request.user)
+            applied_dict = {app.job_id: app for app in applied}
+            for job in qs:
+                job.my_application = applied_dict.get(job.id)
         return qs
 
     def get_context_data(self, **kwargs):
@@ -86,7 +91,13 @@ def apply_to_job(request, pk):
         candidate=request.user,
         defaults={"status": "applied", "note": note},
     )
-    if not created and note:
+    if created:
+        messages.success(request, "Your application has been submitted!")
+    elif note:
         app.note = note
         app.save(update_fields=["note"])
-    return redirect('job_detail', pk=job.pk) 
+        messages.info(request, "Your note has been updated for this application.")
+    else:
+        messages.warning(request, "You already applied to this job.")
+
+    return redirect('job_detail', pk=job.pk)

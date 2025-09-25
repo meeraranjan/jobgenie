@@ -9,6 +9,7 @@
             <h2>Sign Up</h2>
             <hr />
             <form method="POST">
+              <input type="hidden" name="next" value="{{ template_data.next }}">
               {% csrf_token %}
               {{ template_data.form.as_p }}
               <button type="submit" class="btn bg-dark text-white">

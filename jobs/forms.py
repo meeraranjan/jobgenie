@@ -17,3 +17,17 @@ class JobFilterForm(forms.Form):
         required=False,
         choices=[('', 'Either'), ('YES', 'Sponsorship available'), ('NO', 'No sponsorship')],
     )
+    
+class JobForm(forms.ModelForm):
+    class Meta:
+        model = Job
+        fields = [
+            "title",
+            "skills",
+            "location",
+            "salary_min",
+            "salary_max",
+            "job_type",
+            "visa_sponsorship",
+            "company_name",
+        ]

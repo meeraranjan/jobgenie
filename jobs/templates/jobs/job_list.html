@@ -6,6 +6,13 @@
     <div class="row mt-3">
       <div class="col mx-auto mb-3">
         <h2>Open Positions</h2>
+
+        {% if user.is_authenticated and user.recruiter_profile %}
+          <div class="mb-3">
+            <a href="{% url 'job_create' %}" class="btn btn-success">Post a New Job</a>
+          </div>
+        {% endif %}
+
         <hr />
 
         <form method="GET" class="mb-3">
@@ -124,11 +131,13 @@
                   </div>
                 {% endif %}
 
-
                 <div class="mt-auto">
                   <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white">
                     View Details
                   </a>
+                  {% if user.is_authenticated and user.recruiter_profile == job.recruiter %}
+                    <a href="{% url 'job_edit' job.pk %}" class="btn btn-primary">Edit</a>
+                  {% endif %}
                 </div>
               </div>
             </div>
@@ -164,8 +173,6 @@
             </ul>
           </nav>
         {% endif %}
-
-      </div>
     </div>
   </div>
 </div>

@@ -37,6 +37,11 @@
               <em>Not specified.</em>
             {% endif %}
           </p>
+          
+          {% if user.is_authenticated and user.recruiter_profile == job.recruiter %}
+            <a href="{% url 'job_edit' job.pk %}" class="btn btn-primary mt-3">Edit Job</a>
+          {% endif %}
+          
         </div>
       </div>
 

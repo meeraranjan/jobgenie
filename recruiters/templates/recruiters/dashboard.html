@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container py-4">
+  <h2 class="mb-4">Recruiter Dashboard</h2>
+
+  <div class="mb-3">
+    <a href="{% url 'job_create' %}" class="btn btn-success">+ Post a New Job</a>
+  </div>
+
+  {% if jobs %}
+    <div class="table-responsive">
+      <table class="table align-middle table-striped">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Type</th>
+            <th>Posted</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in jobs %}
+            <tr>
+              <td>
+                <a href="{% url 'job_detail' job.pk %}">
+                  {{ job.title }}
+                </a>
+              </td>
+              <td>{{ job.location }}</td>
+              <td>{{ job.get_job_type_display }}</td>
+              <td>{{ job.created_at|date:"M j, Y" }}</td>
+              <td class="text-end">
+                <a href="{% url 'job_edit' job.pk %}" class="btn btn-sm btn-primary">Edit</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      You haven’t posted any jobs yet. Click “Post a New Job” to get started!
+    </div>
+  {% endif %}
+</div>
+
+{% endblock content %}

@@ -36,6 +36,18 @@
                                 href="{% url 'home.index' %}">Home</a>
                         </li>
                         <li class="nav-item">
+                            {% if user.is_authenticated %}
+                                {% if user.recruiter_profile %}
+                                    <a class="nav-link" href="{% url 'recruiters:dashboard' %}">Recruiter Dashboard</a>
+                                {% else %}
+                                    <a class="nav-link" href="{% url 'recruiters:signup' %}">Become a Recruiter</a>
+                                {% endif %}
+                            {% else %}
+                                <a class="nav-link" href="{% url 'accounts.signup' %}?next={% url 'recruiters:signup' %}">Become a Recruiter</a>
+                            {% endif %}
+                        </li>
+
+                        <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'home.about' %}active{% endif %}"
                                 href="{% url 'home.about' %}">About</a>
                         </li>

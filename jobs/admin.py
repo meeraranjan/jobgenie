@@ -3,9 +3,9 @@ from .models import Job, Application
 
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('title', 'location', 'job_type', 'visa_sponsorship', 'created_at')
+    list_display = ('title', 'recruiter', 'location', 'job_type', 'visa_sponsorship', 'created_at')
     list_filter  = ('job_type', 'visa_sponsorship', 'location')
-    search_fields = ('title', 'skills', 'location')
+    search_fields = ('title', 'skills', 'location', 'recruiter_company')
 
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):

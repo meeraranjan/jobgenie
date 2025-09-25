@@ -8,17 +8,29 @@
         <h2>Open Positions</h2>
         <hr />
         <form method="GET">
-          <div class="row g-2">
-            <div class="col-auto">
-              <div class="input-group">
-                <span class="input-group-text">Search</span>
-                <input type="text" class="form-control" name="search"
-                       value="{{ request.GET.search }}" placeholder="Title, skill, or location">
-              </div>
+            <div class="row g-2">
+            <div class="col-md-4">
+              <input type="text" class="form-control" name="title"
+                      value="{{ request.GET.title }}" placeholder="Title">
             </div>
-            <div class="col-auto">
+
+            <div class="col-md-3">
+              <input type="text" class="form-control" name="skills"
+                      value="{{ request.GET.skills }}" placeholder="Skills">
+            </div>
+
+            <div class="col-md-3">
+              <input type="text" class="form-control" name="location"
+                      value="{{ request.GET.location }}" placeholder="Location">
+            </div>
+
+            <div class="col-12 mt-2">
               <button class="btn bg-dark text-white" type="submit">Search</button>
+              <a class="btn btn-outline-secondary" href="{% url 'job_list' %}">Reset</a>
             </div>
+          </div>
+        </form>
+          <div class="row g-2">
           </div>
         </form>
       </div>
@@ -38,6 +50,28 @@
                   {{ job.get_visa_sponsorship_display }}
                 </span>
               </div>
+
+              {% if job.my_application %}
+                <div class="small text-success mb-1">
+                  <i class="bi bi-check-square"></i>
+                  Applied on {{ job.my_application.applied_at|date:"M j, Y, g:i a T" }}
+                </div>
+
+                <div class="small mb-2">
+                  <strong>Status:</strong>
+                  <span class="badge
+                    {% if job.my_application.status == 'applied' %} bg-secondary
+                    {% elif job.my_application.status == 'review' %} bg-info text-dark
+                    {% elif job.my_application.status == 'interview' %} bg-warning text-dark
+                    {% elif job.my_application.status == 'offer' %} bg-success
+                    {% elif job.my_application.status == 'closed' %} bg-danger
+                    {% else %} bg-dark
+                    {% endif %}
+                  ">
+                    {{ job.my_application.get_status_display }}
+                  </span>
+                </div>
+              {% endif %}
 
               {% if job.salary_min or job.salary_max %}
                 <div class="mb-2 small">

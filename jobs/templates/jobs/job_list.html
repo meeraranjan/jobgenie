@@ -7,89 +7,143 @@
       <div class="col mx-auto mb-3">
         <h2>Open Positions</h2>
         <hr />
-        <form method="GET">
-            <div class="row g-2">
-            <div class="col-md-4">
+
+        <form method="GET" class="mb-3">
+          <div class="row g-2">
+            <div class="col-12 col-md-4">
               <input type="text" class="form-control" name="title"
-                      value="{{ request.GET.title }}" placeholder="Title">
+                     value="{{ request.GET.title }}" placeholder="Title">
             </div>
-
-            <div class="col-md-3">
+            <div class="col-12 col-md-4">
               <input type="text" class="form-control" name="skills"
-                      value="{{ request.GET.skills }}" placeholder="Skills">
+                     value="{{ request.GET.skills }}" placeholder="Skills">
             </div>
-
-            <div class="col-md-3">
+            <div class="col-12 col-md-4">
               <input type="text" class="form-control" name="location"
-                      value="{{ request.GET.location }}" placeholder="Location">
+                     value="{{ request.GET.location }}" placeholder="Location">
+            </div>
+          </div>
+
+          <div class="row g-2 mt-2 align-items-center">
+            <div class="col-12 col-md-4 d-flex gap-2">
+              <input type="number" step="0.01" class="form-control" name="min_salary"
+                     value="{{ request.GET.min_salary }}" placeholder="Min $">
+              <input type="number" step="0.01" class="form-control" name="max_salary"
+                     value="{{ request.GET.max_salary }}" placeholder="Max $">
             </div>
 
-            <div class="col-12 mt-2">
+            <div class="col-12 col-md-5 d-flex flex-wrap align-items-center gap-3">
+              <div class="small text-muted">Work Mode:</div>
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="remote_type" value="ON"
+                       {% if 'ON' in selected_remote_types %}checked{% endif %}>
+                <span class="form-check-label">On-site</span>
+              </label>
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="remote_type" value="RE"
+                       {% if 'RE' in selected_remote_types %}checked{% endif %}>
+                <span class="form-check-label">Remote</span>
+              </label>
+              <label class="form-check">
+                <input class="form-check-input" type="checkbox" name="remote_type" value="HY"
+                       {% if 'HY' in selected_remote_types %}checked{% endif %}>
+                <span class="form-check-label">Hybrid</span>
+              </label>
+            </div>
+
+            <div class="col-12 col-md-3 d-flex flex-wrap align-items-center gap-3">
+              <div class="small text-muted">Visa:</div>
+              <label class="form-check">
+                <input class="form-check-input" type="radio" name="visa" value=""
+                       {% if not selected_visa %}checked{% endif %}>
+                <span class="form-check-label">Either</span>
+              </label>
+              <label class="form-check">
+                <input class="form-check-input" type="radio" name="visa" value="YES"
+                       {% if selected_visa == 'YES' %}checked{% endif %}>
+                <span class="form-check-label">Yes</span>
+              </label>
+              <label class="form-check">
+                <input class="form-check-input" type="radio" name="visa" value="NO"
+                       {% if selected_visa == 'NO' %}checked{% endif %}>
+                <span class="form-check-label">No</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="row g-2 mt-3">
+            <div class="col-12 d-flex gap-2">
               <button class="btn bg-dark text-white" type="submit">Search</button>
               <a class="btn btn-outline-secondary" href="{% url 'job_list' %}">Reset</a>
             </div>
           </div>
         </form>
-          <div class="row g-2">
-          </div>
-        </form>
-      </div>
-    </div>
 
-    <div class="row">
-      {% for job in jobs %}
-        <div class="col-md-4 col-lg-3 mb-3">
-          <div class="card h-100 p-2 pt-3 align-items-center">
-            <h6 class="card-title mb-2 text-muted">{{ job.company_name }}</h6>
-            <h5 class="mb-1">{{ job.title }}</h5>
-            <div class="mb-2 small text-muted">{{ job.location }}</div>
-            <div class="card-body text-center">
-              <div class="mb-2">
-                <span class="badge bg-secondary">{{ job.get_job_type_display }}</span>
-                <span class="badge {% if job.visa_sponsorship == 'YES' %}bg-success{% else %}bg-dark{% endif %}">
-                  {{ job.get_visa_sponsorship_display }}
-                </span>
-              </div>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4 mt-2">
+          {% for job in jobs %}
+            <div class="col">
+              <div class="card h-100 p-3 text-center">
+                <h6 class="text-muted mb-1">{{ job.company_name }}</h6>
+                <h5 class="mb-1">{{ job.title }}</h5>
+                <div class="small text-muted mb-2">{{ job.location }}</div>
 
-              {% if job.my_application %}
-                <div class="small text-success mb-1">
-                  <i class="bi bi-check-square"></i>
-                  Applied on {{ job.my_application.applied_at|date:"M j, Y, g:i a T" }}
-                </div>
-
-                <div class="small mb-2">
-                  <strong>Status:</strong>
-                  <span class="badge
-                    {% if job.my_application.status == 'applied' %} bg-secondary
-                    {% elif job.my_application.status == 'review' %} bg-info text-dark
-                    {% elif job.my_application.status == 'interview' %} bg-warning text-dark
-                    {% elif job.my_application.status == 'offer' %} bg-success
-                    {% elif job.my_application.status == 'closed' %} bg-danger
-                    {% else %} bg-dark
-                    {% endif %}
-                  ">
-                    {{ job.my_application.get_status_display }}
+                <div class="mb-2">
+                  <span class="badge bg-secondary">{{ job.get_job_type_display }}</span>
+                  <span class="badge {% if job.visa_sponsorship == 'YES' %}bg-success{% else %}bg-dark{% endif %}">
+                    {{ job.get_visa_sponsorship_display }}
                   </span>
+                  {% if job.remote_type %}
+                    <span class="badge bg-dark">{{ job.get_remote_type_display }}</span>
+                  {% endif %}
                 </div>
-              {% endif %}
 
-              {% if job.salary_min or job.salary_max %}
-                <div class="mb-2 small">
-                  ${{ job.salary_min|default:"?" }} – ${{ job.salary_max|default:"?" }}
+                {% if job.salary_min or job.salary_max %}
+                  <div class="small mb-3">
+                    ${{ job.salary_min|default:"?" }} – ${{ job.salary_max|default:"?" }}
+                  </div>
+                {% endif %}
+
+                <div class="mt-auto">
+                  <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white">
+                    View Details
+                  </a>
                 </div>
-              {% endif %}
-
-              <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white">
-                View Details
-              </a>
+              </div>
             </div>
-          </div>
+          {% empty %}
+            <div class="col">
+              <div class="alert alert-light border w-100">No jobs found.</div>
+            </div>
+          {% endfor %}
         </div>
-      {% empty %}
-        <div class="col">
-          <div class="alert alert-light border">No jobs found.</div>
-        </div>
-      {% endfor %}
+
+        {% if is_paginated %}
+          <nav class="mt-3">
+            <ul class="pagination">
+              {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">
+                    Prev
+                  </a>
+                </li>
+              {% endif %}
+              <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+              </li>
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link"
+                     href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">
+                    Next
+                  </a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        {% endif %}
+
+      </div>
     </div>
   </div>
 </div>

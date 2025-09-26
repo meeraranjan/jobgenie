@@ -29,7 +29,6 @@
           <h5>Required Skills</h5>
           <p class="mb-0">
             {% if job.skills %}
-              <!-- display comma-separated skills as chips -->
               {% for s in job.skill_list %}
                 <span class="badge bg-secondary me-1">{{ s }}</span>
               {% endfor %}

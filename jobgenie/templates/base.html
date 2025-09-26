@@ -90,10 +90,28 @@
     <!-- Footer -->
     <footer class="bg-dark text-light pt-4 mt-5">
         <div class="container text-center">
-            <div class="mb-3">
-                <a href="{% url 'home.index' %}" class="text-light text-decoration-none me-3">Home</a>
-                <a href="{% url 'home.about' %}" class="text-light text-decoration-none">About</a>
-            </div>
+            <div class="row text-center text-md-start">
+               <div class="col-md-6 mb-3">
+                    <h5 class="text-uppercase">Quick Links</h5>
+                    <ul class="list-unstyled">
+                    <li><a href="{% url 'home.index' %}" class="text-light text-decoration-none">Home</a></li>
+                    <li><a href="{% url 'home.about' %}" class="text-light text-decoration-none">About</a></li>
+                    <li><a href="{% url 'job_list' %}" class="text-light text-decoration-none">Jobs</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'profiles:view_profile' %}" class="text-light text-decoration-none">My Profile</a></li>
+                    {% else %}
+                        <li><a href="{% url 'accounts.login' %}" class="text-light text-decoration-none">Login</a></li>
+                        <li><a href="{% url 'accounts.signup' %}" class="text-light text-decoration-none">Sign Up</a></li>
+                    {% endif %}
+                    </ul>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <h5 class="text-uppercase">Contact</h5>
+                    <p class="mb-1"><i class="fas fa-envelope me-2"></i> support@jobgenie.com</p>
+                    <p class="mb-1"><i class="fas fa-phone me-2"></i> +1 (555) 123-4567</p>
+                </div>
+                </div>
             <p class="mb-0">&copy; {{ now|date:"Y" }} Job Genie. All rights reserved.</p>
         </div>
     </footer>

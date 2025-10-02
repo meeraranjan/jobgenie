@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Job Seekers</h2>
+
+    <div class="row">
+        {% for profile in profiles %}
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">
+                        {{ profile.first_name }} {{ profile.last_name }}
+                    </h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ profile.headline }}</h6>
+
+                    <!-- <p class="card-text mb-2">
+                        <strong>Skills:</strong>
+                        {{ profile.skills|default:"No skills listed" }}
+                    </p> -->
+                    <label class="form-label small text-muted">Skills</label>
+                    <textarea class="form-control" rows="5" readonly>{{ profile.skills|default_if_none:"" }}</textarea>
+
+
+                    <a href="{% url 'profiles:jobseeker_detail' profile.pk %}" class="btn btn-outline-primary mt-auto">
+                        View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No public job seekers available.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

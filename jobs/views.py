@@ -7,7 +7,7 @@ import operator
 from django.contrib import messages
 
 from .models import Job, Application
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import JobForm
 from django.core.exceptions import PermissionDenied
@@ -23,6 +23,15 @@ class JobListView(ListView):
     def get_queryset(self):
         qs = Job.objects.all().order_by('-created_at')
         g = self.request.GET
+
+        # Filter jobs based on user role
+        user = self.request.user
+        if user.is_authenticated:
+            profile = getattr(user, 'userprofile', None)
+            if profile and profile.role == 'RECRUITER':
+                recruiter = getattr(user, 'recruiter_profile', None)
+                if recruiter:
+                    qs = qs.filter(recruiter=recruiter)
 
         if g.get('title'):
             qs = qs.filter(title__icontains=g['title'])
@@ -54,11 +63,14 @@ class JobListView(ListView):
             qs = qs.filter(Q(salary_max__isnull=True) | Q(salary_max__gte=min_salary))
         if max_salary:
             qs = qs.filter(Q(salary_min__isnull=True) | Q(salary_min__lte=max_salary))
-        if self.request.user.is_authenticated:
-            applied = Application.objects.filter(candidate=self.request.user)
+        
+        # Add application status for authenticated job seekers
+        if user.is_authenticated and getattr(user.userprofile, 'role', None) == 'JOB_SEEKER':
+            applied = Application.objects.filter(candidate=user)
             applied_dict = {app.job_id: app for app in applied}
             for job in qs:
                 job.my_application = applied_dict.get(job.id)
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -83,10 +95,14 @@ class JobDetailView(DetailView):
             ).first()
         return ctx
 
-
 @login_required
 @require_POST
 def apply_to_job(request, pk):
+    # Check if user is a job seeker
+    if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'JOB_SEEKER':
+        messages.error(request, "Only job seekers can apply to jobs.")
+        return redirect("job_detail", pk=pk)
+    
     job = get_object_or_404(Job, pk=pk)
     note = (request.POST.get("note") or "").strip()
     app, created = Application.objects.get_or_create(
@@ -131,6 +147,23 @@ class JobUpdateView(LoginRequiredMixin, UpdateView):
         obj = super().get_object(queryset)
         recruiter = getattr(self.request.user, "recruiter_profile", None)
         if obj.recruiter != recruiter:
-
             raise PermissionDenied("You can only edit your own jobs.")
         return obj
+
+
+class JobDeleteView(LoginRequiredMixin, DeleteView):
+    model = Job
+    template_name = 'jobs/job_confirm_delete.html'
+    success_url = '/recruiters/dashboard/'
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        recruiter = getattr(self.request.user, "recruiter_profile", None)
+        if obj.recruiter != recruiter:
+            raise PermissionDenied("You can only delete your own jobs.")
+        return obj
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, f"Job '{self.get_object().title}' has been deleted successfully.")
+        return super().delete(request, *args, **kwargs)
+

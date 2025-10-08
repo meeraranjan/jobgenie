@@ -1,9 +1,9 @@
-from django.shortcuts import render
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from .forms import CustomUserCreationForm, CustomErrorList
 from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from profiles.models import UserProfile
+from recruiters.models import Recruiter
 # Create your views here.
 @login_required
 def logout(request):
@@ -20,13 +20,14 @@ def signup(request):
     elif request.method == 'POST':
         form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            # Redirect to login page instead of auto-login
             return redirect('accounts.login')
         else:
             template_data['form'] = form
             return render(request, 'accounts/signup.html',
             {'template_data': template_data})
-        
+
 def login(request):
     template_data = {}
     template_data['title'] = 'Login'
@@ -46,3 +47,4 @@ def login(request):
         else:
             auth_login(request, user)
             return redirect(next_url)
+        

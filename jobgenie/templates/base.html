@@ -55,9 +55,19 @@
                                 <li class="nav-item">
                                     <a class="nav-link" href="{% url 'accounts.signup' %}">Complete Profile</a>
                             {% endif %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'accounts.logout' %}">Logout ({{ user.username }})</a>
-                            </li>
+                        </li>
+
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path|slice:':6' == '/jobs/' %}active{% endif %}"
+                                href="{% url 'job_list' %}">
+                                Jobs
+                            </a>
+                        </li>
+                        {% if user.is_authenticated %}
+                        <a class="nav-link" href="{% url 'profiles:view_profile' %}">My Profile</a>
+                        <a class="nav-link" href="{% url 'my_applications' %}">My Applications</a>
+                        <a class="nav-link" href="{% url 'accounts.logout' %}">Logout ({{user.username }})</a>
                         {% else %}
                             <li class="nav-item">
                                 <a class="nav-link {% if request.resolver_match.url_name == 'accounts.login' %}active{% endif %}" href="{% url 'accounts.login' %}">Login</a>

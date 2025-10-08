@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from functools import reduce
 import operator
@@ -160,3 +161,12 @@ class JobDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(request, f"Job '{self.get_object().title}' has been deleted successfully.")
         return super().delete(request, *args, **kwargs)
 
+
+@method_decorator(login_required, name='dispatch')
+class MyApplicationsView(ListView):
+    model = Application
+    template_name = 'jobs/my_applications.html'
+    context_object_name = 'applications'
+
+    def get_queryset(self):
+        return Application.objects.filter(candidate=self.request.user).select_related('job').order_by('-applied_at')

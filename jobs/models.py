@@ -76,3 +76,12 @@ class Application(models.Model):
 
     def __str__(self):
         return f"Application by {self.candidate} for {self.job}"
+
+    def get_status_badge_class(self):
+        return {
+            'applied': 'bg-secondary',
+            'review': 'bg-info text-dark',
+            'interview': 'bg-warning text-dark',
+            'offer': 'bg-success',
+            'closed': 'bg-danger'
+        }.get(self.status, 'bg-dark')

@@ -12,6 +12,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import JobForm
 from django.core.exceptions import PermissionDenied
 from .forms import JobFilterForm
+from math import radians, sin, cos, asin, sqrt
+
+def haversine_km(lat1, lng1, lat2, lng2):
+    """Return distance (km) between two lat/long points"""
+    if None in (lat1, lng1, lat2, lng2):
+        return None
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlng = radians(lng2 - lng1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
+    c = 2 * asin(sqrt(a))
+    return R * c
 
 
 class JobListView(ListView):
@@ -24,14 +36,17 @@ class JobListView(ListView):
         qs = Job.objects.all().order_by('-created_at')
         g = self.request.GET
 
-        if g.get('title'):
-            qs = qs.filter(title__icontains=g['title'])
+        title = g.get('title')
+        if title:
+            qs = qs.filter(title__icontains=title)
 
-        if g.get('location'):
-            qs = qs.filter(location__icontains=g['location'])
+        loc = g.get('location')
+        if loc:
+            qs = qs.filter(location__icontains=loc)
 
-        if g.get('skills'):
-            raw = g['skills'].replace(',', ' ')
+        skills = g.get('skills')
+        if skills:
+            raw = skills.replace(',', ' ')
             tokens = [t.strip() for t in raw.split() if t.strip()]
             if tokens:
                 qs = qs.filter(reduce(operator.or_, (Q(skills__icontains=t) for t in tokens)))
@@ -54,11 +69,31 @@ class JobListView(ListView):
             qs = qs.filter(Q(salary_max__isnull=True) | Q(salary_max__gte=min_salary))
         if max_salary:
             qs = qs.filter(Q(salary_min__isnull=True) | Q(salary_min__lte=max_salary))
+
+        lat = g.get('user_lat')
+        lng = g.get('user_lng')
+        radius = g.get('radius_km')
+        if lat and lng and radius:
+            try:
+                user_lat = float(lat)
+                user_lng = float(lng)
+                radius_km = float(radius)
+                with_coords = qs.exclude(latitude__isnull=True).exclude(longitude__isnull=True)
+                keep_ids = []
+                for j in with_coords.only('id', 'latitude', 'longitude'):
+                    d = haversine_km(user_lat, user_lng, j.latitude, j.longitude)
+                    if d is not None and d <= radius_km:
+                        keep_ids.append(j.id)
+                qs = qs.filter(id__in=keep_ids)
+            except ValueError:
+                pass
+
         if self.request.user.is_authenticated:
             applied = Application.objects.filter(candidate=self.request.user)
-            applied_dict = {app.job_id: app for app in applied}
+            by_job_id = {app.job_id: app for app in applied}
             for job in qs:
-                job.my_application = applied_dict.get(job.id)
+                job.my_application = by_job_id.get(job.id)
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -68,7 +103,6 @@ class JobListView(ListView):
         ctx['selected_remote_types'] = g.getlist('remote_type')
         ctx['selected_visa'] = g.get('visa', '')
         return ctx
-
 
 class JobDetailView(DetailView):
     model = Job

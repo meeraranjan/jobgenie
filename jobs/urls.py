@@ -8,4 +8,5 @@ urlpatterns = [
     path("<int:pk>/apply/", apply_to_job, name="apply_to_job"),
     path("new/", JobCreateView.as_view(), name="job_create"),
     path("<int:pk>/edit/", JobUpdateView.as_view(), name="job_edit"),
+    path('', views.JobListView.as_view(), name='job_list'),
 ]

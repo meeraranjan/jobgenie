@@ -44,6 +44,9 @@ class Job(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    latitude  = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
     @property
     def skill_list(self):
         return [s.strip() for s in self.skills.split(',')] if self.skills else []

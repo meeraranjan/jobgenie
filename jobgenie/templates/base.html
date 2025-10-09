@@ -39,45 +39,26 @@
                             <a class="nav-link {% if request.resolver_match.url_name == 'home.about' %}active{% endif %}"
                                 href="{% url 'home.about' %}">About</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path|slice:':6' == '/jobs/' %}active{% endif %}" href="{% url 'job_list' %}">Jobs</a>
+                        </li>
                         {% if user.is_authenticated %}
                             {% if user.userprofile.role == "JOB_SEEKER" %}
                                 <li class="nav-item">
                                     <a class="nav-link {% if request.path|slice:':10' == '/profiles/' %}active{% endif %}" href="{% url 'profiles:view_profile' %}">My Profile</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.path|slice:':6' == '/jobs/' %}active{% endif %}" href="{% url 'job_list' %}">Jobs</a>
-                                </li>
                             {% elif user.userprofile.role == "RECRUITER" %}
                                 <li class="nav-item">
                                     <a class="nav-link {% if request.resolver_match.url_name == 'recruiters:dashboard' %}active{% endif %}" href="{% url 'recruiters:dashboard' %}">Dashboard</a>
                                 </li>
-                                {% if user.recruiter_profile %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'job_create' %}active{% endif %}" href="{% url 'job_create' %}">Post Job</a>
-                                    </li>
-                                {% endif %}
                             {% else %}
                                 <li class="nav-item">
                                     <a class="nav-link" href="{% url 'accounts.signup' %}">Complete Profile</a>
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.resolver_match.url_name == 'recruiters:dashboard' %}active{% endif %}" href="{% url 'recruiters:dashboard' %}">Dashboard</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link {% if request.path|slice:':6' == '/jobs/' %}active{% endif %}" href="{% url 'job_list' %}">Jobs</a>
-                                </li>
-                                {% if user.recruiter_profile %}
-                                    <li class="nav-item">
-                                        <a class="nav-link {% if request.resolver_match.url_name == 'job_create' %}active{% endif %}" href="{% url 'job_create' %}">Post Job</a>
-                                    </li>
-                                {% endif %}
                             {% endif %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'accounts.logout' %}">Logout ({{ user.username }})</a>
                             </li>
                         {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link {% if request.path|slice:':6' == '/jobs/' %}active{% endif %}" href="{% url 'job_list' %}">Jobs</a>
-                            </li>
                             <li class="nav-item">
                                 <a class="nav-link {% if request.resolver_match.url_name == 'accounts.login' %}active{% endif %}" href="{% url 'accounts.login' %}">Login</a>
                             </li>

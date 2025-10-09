@@ -34,6 +34,7 @@
               <td>{{ job.created_at|date:"M j, Y" }}</td>
               <td class="text-end">
                 <a href="{% url 'job_edit' job.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
               </td>
             </tr>
           {% endfor %}

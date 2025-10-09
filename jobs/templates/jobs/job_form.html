@@ -40,7 +40,11 @@
               <button type="submit" class="btn btn-dark">
                 {% if object %} Update Job {% else %} Post Job {% endif %}
               </button>
-              <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">Cancel</a>
+              {% if user.is_authenticated and user.userprofile.role == 'RECRUITER' %}
+                <a href="{% url 'recruiters:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+              {% else %}
+                <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">Cancel</a>
+              {% endif %}
             </div>
           </form>
         </div>

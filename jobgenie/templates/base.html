@@ -44,28 +44,46 @@
                         </li>
                         {% if user.is_authenticated %}
                             {% if user.userprofile.role == "JOB_SEEKER" %}
+                                <!-- Job Seeker Links -->
                                 <li class="nav-item">
-                                    <a class="nav-link {% if request.path|slice:':10' == '/profiles/' %}active{% endif %}" href="{% url 'profiles:view_profile' %}">My Profile</a>
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'profiles:view_profile' %}active{% endif %}"
+                                        href="{% url 'profiles:view_profile' %}">My Profile</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'my_applications' %}active{% endif %}"
+                                        href="{% url 'my_applications' %}">My Applications</a>
                                 </li>
                             {% elif user.userprofile.role == "RECRUITER" %}
+                                <!-- Recruiter Links -->
                                 <li class="nav-item">
-                                    <a class="nav-link {% if request.resolver_match.url_name == 'recruiters:dashboard' %}active{% endif %}" href="{% url 'recruiters:dashboard' %}">Dashboard</a>
+                                    <a class="nav-link {% if request.resolver_match.url_name == 'recruiters:dashboard' %}active{% endif %}"
+                                        href="{% url 'recruiters:dashboard' %}">Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {% if request.path|slice:':18' == '/profiles/jobseekers/' %}active{% endif %}"
+                                        href="{% url 'profiles:jobseeker_list' %}">Job Seekers</a>
                                 </li>
                             {% else %}
+                                <!-- Incomplete Profile -->
                                 <li class="nav-item">
                                     <a class="nav-link" href="{% url 'accounts.signup' %}">Complete Profile</a>
+                                </li>
                             {% endif %}
+                            <!-- Logout -->
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'accounts.logout' %}">Logout ({{ user.username }})</a>
                             </li>
                         {% else %}
+                            <!-- Guest Links -->
                             <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'accounts.login' %}active{% endif %}" href="{% url 'accounts.login' %}">Login</a>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'accounts.login' %}active{% endif %}"
+                                    href="{% url 'accounts.login' %}">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'accounts.signup' %}active{% endif %}" href="{% url 'accounts.signup' %}">Sign Up</a>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'accounts.signup' %}active{% endif %}"
+                                    href="{% url 'accounts.signup' %}">Sign Up</a>
                             </li>
-                        {% endif %}
+                        {% endif %}                    
                     </ul>
                 </div>
             </div>

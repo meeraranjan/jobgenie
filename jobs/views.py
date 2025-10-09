@@ -26,13 +26,6 @@ class JobListView(ListView):
 
         # Filter jobs based on user role
         user = self.request.user
-        if user.is_authenticated:
-            profile = getattr(user, 'userprofile', None)
-            if profile and profile.role == 'RECRUITER':
-                recruiter = getattr(user, 'recruiter_profile', None)
-                if recruiter:
-                    qs = qs.filter(recruiter=recruiter)
-
         if g.get('title'):
             qs = qs.filter(title__icontains=g['title'])
 

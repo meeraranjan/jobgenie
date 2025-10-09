@@ -1,5 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from .decorators import recruiter_required
 # # Create your views here.
 
 from .forms import JobSeekerProfileForm
@@ -42,3 +43,13 @@ def edit_profile(request):
     else:
         form = JobSeekerProfileForm(instance=profile)
     return render(request, 'profiles/edit_profile.html', {'form': form})
+
+@recruiter_required
+def jobseeker_list(request):
+    profiles = JobSeekerProfile.objects.filter(is_public=True)
+    return render(request, 'profiles/jobseeker_list.html', {'profiles': profiles})
+
+@recruiter_required
+def jobseeker_detail(request, pk):
+    profile = get_object_or_404(JobSeekerProfile, pk=pk, is_public=True)
+    return render(request, 'profiles/jobseeker_detail.html', {'profile': profile})

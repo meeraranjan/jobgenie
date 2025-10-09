@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load recruiter_extras %}
 {% load static %}
 {% block content %}
 
@@ -18,6 +19,7 @@
             <th>Location</th>
             <th>Type</th>
             <th>Posted</th>
+            <th>Total Applicants</th>
             <th></th>
           </tr>
         </thead>
@@ -32,6 +34,7 @@
               <td>{{ job.location }}</td>
               <td>{{ job.get_job_type_display }}</td>
               <td>{{ job.created_at|date:"M j, Y" }}</td>
+              <td>{{ job.applications.count }}</td>
               <td class="text-end">
                 <a href="{% url 'job_edit' job.pk %}" class="btn btn-sm btn-primary">Edit</a>
                 <a href="{% url 'job_delete' job.pk %}" class="btn btn-sm btn-danger">Delete</a>
@@ -47,5 +50,115 @@
     </div>
   {% endif %}
 </div>
+
+<!-- KANBAN LOGIC -->
+
+{% for job in jobs %}
+  <div class="mb-5">
+    <h4 class="mb-3 text-center fw-bold">{{ job.title }} ({{ job.location }})</h4>
+    <hr class="w-50 mx-auto mb-4">
+
+    {% with pipeline=job_pipelines|get_item:job.id %}
+      {% if pipeline %}
+        <div class="row justify-content-center text-center">
+          {% for stage, apps in pipeline.items %}
+            <div class="col-md-2 mx-2">
+              <div class="card shadow-sm mb-3">
+                <div class="card-header text-center fw-bold text-capitalize text-white"
+                    data-stage="{{ stage }}">
+                  {{ stage }}
+                </div>
+                <div class="card-body kanban-column" style="min-height: 250px; background:#f8f9fa;">
+                  {% for app in apps %}
+                    <div class="card mb-2 p-2 bg-white shadow-sm"
+                        draggable="true"
+                        data-app-id="{{ app.id }}">
+                      <a href="{% url 'recruiters:application_detail' app.id %}" class="text-decoration-none text-dark">
+                        <strong>{{ app.candidate.username }}</strong><br>
+                        <small class="text-muted">{{ app.applied_at|date:"M j, Y" }}</small>
+                      </a>
+                    </div>
+                  {% empty %}
+                    <p class="text-muted small">No applications.</p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No applications for this job yet.</p>
+      {% endif %}
+    {% endwith %}
+  </div>
+{% endfor %}
+
+<!-- DRAG-AND-DROP LOGIC -->
+<form style="display:none;">{% csrf_token %}</form>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const cards = document.querySelectorAll("[draggable='true']");
+  const columns = document.querySelectorAll(".kanban-column");
+
+  cards.forEach(card => {
+    card.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("appId", card.dataset.appId);
+    });
+  });
+
+  columns.forEach(col => {
+    col.addEventListener("dragover", e => e.preventDefault());
+    col.addEventListener("drop", e => {
+      e.preventDefault();
+      const appId = e.dataTransfer.getData("appId");
+      const newStatus = col.parentElement.querySelector(".card-header")
+                           .textContent.trim().toLowerCase();
+
+      fetch(`/recruiters/update_status/${appId}/${newStatus}/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+      }).then(response => {
+        if (response.ok) window.location.reload();
+      });
+    });
+  });
+});
+</script>
+
+<style>
+  /* Color-code each Kanban column header by stage */
+  .card-header[data-stage="applied"] {
+    background-color: #6c757d; /* gray */
+  }
+  .card-header[data-stage="review"] {
+    background-color: #0dcaf0; /* light blue */
+    color: #000;
+  }
+  .card-header[data-stage="interview"] {
+    background-color: #ffc107; /* yellow */
+    color: #000;
+  }
+  .card-header[data-stage="offer"] {
+    background-color: #28a745; /* green */
+  }
+  .card-header[data-stage="closed"] {
+    background-color: #dc3545; /* red */
+  }
+  .card-body .card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: all 0.2s ease-in-out;
+  cursor: grab;
+  }
+  .card-header .badge {
+  font-size: 0.85rem;
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+</style>
 
 {% endblock content %}

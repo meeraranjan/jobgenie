@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'recruiters:dashboard' %}" class="btn btn-link ps-0 mb-3">← Back to Dashboard</a>
+
+  <div class="card p-4 shadow-sm">
+    <h3 class="fw-bold">{{ application.job.title }}</h3>
+    <p class="text-muted mb-4">Applicant: <strong>{{ application.candidate.username }}</strong></p>
+
+    <hr>
+
+    <h5 class="fw-semibold">Application Note</h5>
+    {% if application.note %}
+      <div class="border rounded bg-light p-3 mb-4">{{ application.note }}</div>
+    {% else %}
+      <p class="text-muted">No message was submitted with this application.</p>
+    {% endif %}
+
+    <h5 class="fw-semibold">Profile</h5>
+    {% if profile %}
+    <div class="card p-3 mt-2">
+        <p><strong>Name:</strong> {{ profile.first_name }} {{ profile.last_name }}</p>
+        <p><strong>Headline:</strong> {{ profile.headline }}</p>
+        <p><strong>Skills:</strong> {{ profile.skills|linebreaksbr }}</p>
+        <p><strong>Education:</strong> {{ profile.education|linebreaksbr }}</p>
+        <p><strong>Work Experience:</strong> {{ profile.work_experience|linebreaksbr }}</p>
+        {% if profile.links %}
+        <p><strong>Links:</strong> {{ profile.links }}</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-secondary mt-2">
+        This user's profile is private.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

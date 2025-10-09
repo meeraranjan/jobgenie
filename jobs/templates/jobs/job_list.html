@@ -89,19 +89,40 @@
         <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4 mt-2">
           {% for job in jobs %}
             <div class="col">
-              <div class="card h-100 p-3 text-center">
-                <h6 class="text-muted mb-1">{{ job.company_name }}</h6>
-                <h5 class="mb-1">{{ job.title }}</h5>
-                <div class="small text-muted mb-2">{{ job.location }}</div>
-
-                <div class="mb-2">
-                  <span class="badge bg-secondary">{{ job.get_job_type_display }}</span>
-                  <span class="badge {% if job.visa_sponsorship == 'YES' %}bg-success{% else %}bg-dark{% endif %}">
-                    {{ job.get_visa_sponsorship_display }}
-                  </span>
-                  {% if job.remote_type %}
-                    <span class="badge bg-dark">{{ job.get_remote_type_display }}</span>
+              <div class="card h-100 text-center position-relative">
+                {% if job.my_application %}
+                  {% if job.my_application.status == 'interview' %}
+                    <div class="alert alert-warning text-center rounded-0 mb-0 py-2 fw-semibold">
+                      You’ve been invited to an interview for this position!
+                    </div>
+                  {% elif job.my_application.status == 'offer' %}
+                    <div class="alert alert-success text-center rounded-0 mb-0 py-2 fw-semibold">
+                      Congratulations! You’ve received an offer!
+                    </div>
+                  {% elif job.my_application.status == 'review' %}
+                    <div class="alert alert-info text-center rounded-0 mb-0 py-2 fw-semibold text-dark">
+                      Your application is currently under review.
+                    </div>
+                  {% elif job.my_application.status == 'closed' %}
+                    <div class="alert alert-danger text-center rounded-0 mb-0 py-2 fw-semibold">
+                      Your application has been closed.
+                    </div>
                   {% endif %}
+                {% endif %}
+
+                <div class="card-body p-3">
+                  <h6 class="text-muted mb-1">{{ job.company_name }}</h6>
+                  <h5 class="mb-1">{{ job.title }}</h5>
+                  <div class="small text-muted mb-2">{{ job.location }}</div>
+
+                  <div class="mb-2">
+                    <span class="badge bg-secondary">{{ job.get_job_type_display }}</span>
+                    <span class="badge {% if job.visa_sponsorship == 'YES' %}bg-success{% else %}bg-dark{% endif %}">
+                      {{ job.get_visa_sponsorship_display }}
+                    </span>
+                    {% if job.remote_type %}
+                      <span class="badge bg-dark">{{ job.get_remote_type_display }}</span>
+                    {% endif %}
                 </div>
 
                 {% if job.salary_min or job.salary_max %}
@@ -152,6 +173,7 @@
                     {% endif %}
                   </div>
                 </div>
+              </div>
               </div>
             </div>
           {% empty %}

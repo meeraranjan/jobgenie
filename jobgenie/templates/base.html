@@ -102,9 +102,6 @@
                             <li><a href="{% url 'profiles:view_profile' %}" class="text-light text-decoration-none">My Profile</a></li>
                         {% elif user.userprofile.role == "RECRUITER" %}
                             <li><a href="{% url 'recruiters:dashboard' %}" class="text-light text-decoration-none">Dashboard</a></li>
-                            {% if user.recruiter_profile %}
-                                <li><a href="{% url 'job_create' %}" class="text-light text-decoration-none">Post Job</a></li>
-                            {% endif %}
                         {% endif %}
                         <li><a href="{% url 'accounts.logout' %}" class="text-light text-decoration-none">Logout</a></li>
                     {% else %}

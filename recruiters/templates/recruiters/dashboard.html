@@ -74,7 +74,13 @@
                         draggable="true"
                         data-app-id="{{ app.id }}">
                       <a href="{% url 'recruiters:application_detail' app.id %}" class="text-decoration-none text-dark">
-                        <strong>{{ app.candidate.username }}</strong><br>
+                        <strong>
+                          {% if app.candidate.jobseekerprofile %}
+                            {{ app.candidate.jobseekerprofile.first_name }} {{ app.candidate.jobseekerprofile.last_name }}
+                          {% else %}
+                            {{ app.candidate.username }}
+                          {% endif %} 
+                          </strong><br>
                         <small class="text-muted">{{ app.applied_at|date:"M j, Y" }}</small>
                       </a>
                     </div>

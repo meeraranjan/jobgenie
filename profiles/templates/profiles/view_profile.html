@@ -5,8 +5,8 @@
     <div class="card shadow-sm p-4">
         {% if profile %}
            <h2 class="mb-3">
-            {% if profile.user.first_name or profile.user.last_name %}
-                {{ profile.user.first_name }} {{ profile.user.last_name }}
+            {% if profile.first_name or profile.last_name %}
+                {{ profile.first_name }} {{ profile.last_name }}
             {% else %}
                 {{ profile.user.username }}
             {% endif %}

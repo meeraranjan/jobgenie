@@ -130,3 +130,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
     BASE_DIR / 'jobgenie/static/',
 ]
+
+GOOGLE_MAPS_API_KEY = "AIzaSyCAZGcPey98efdwODbN7bumoJp8ybon9ds"

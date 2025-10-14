@@ -3,117 +3,99 @@
 {% block content %}
 <div class="p-3">
   <div class="container">
-    <div class="row mt-3">
-      <div class="col mx-auto mb-3">
-        <h2>Open Positions</h2>
+    <h2>Open Positions</h2>
 
-        {% if user.is_authenticated and user.recruiter_profile %}
-          <div class="mb-3">
-            <a href="{% url 'job_create' %}" class="btn btn-success">Post a New Job</a>
-          </div>
-        {% endif %}
+    {% if user.is_authenticated and user.recruiter_profile %}
+      <div class="mb-3">
+        <a href="{% url 'job_create' %}" class="btn btn-success">Post a New Job</a>
+      </div>
+    {% endif %}
 
-        <hr />
+    <hr />
 
-        <form method="GET" class="mb-3">
-          <div class="row g-2">
-            <div class="col-12 col-md-4">
-              <input type="text" class="form-control" name="title"
-                     value="{{ request.GET.title }}" placeholder="Title">
-            </div>
-            <div class="col-12 col-md-4">
-              <input type="text" class="form-control" name="skills"
-                     value="{{ request.GET.skills }}" placeholder="Skills">
-            </div>
-            <div class="col-12 col-md-4">
-              <input type="text" class="form-control" name="location"
-                     value="{{ request.GET.location }}" placeholder="Location">
-            </div>
-          </div>
+    <form method="GET" class="mb-3">
+      <div class="row g-2">
+        <div class="col-12 col-md-4">
+          <input type="text" class="form-control" name="title"
+                 value="{{ request.GET.title }}" placeholder="Title">
+        </div>
+        <div class="col-12 col-md-4">
+          <input type="text" class="form-control" name="skills"
+                 value="{{ request.GET.skills }}" placeholder="Skills">
+        </div>
+        <div class="col-12 col-md-4">
+          <input type="text" class="form-control" name="city"
+                 value="{{ request.GET.city }}" placeholder="City">
+        </div>
+      </div>
 
-          <div class="row g-2 mt-2 align-items-center">
-            <div class="col-12 col-md-4 d-flex gap-2">
-              <input type="number" step="0.01" class="form-control" name="min_salary"
-                     value="{{ request.GET.min_salary }}" placeholder="Min $">
-              <input type="number" step="0.01" class="form-control" name="max_salary"
-                     value="{{ request.GET.max_salary }}" placeholder="Max $">
-            </div>
+      <div class="row g-2 mt-2 align-items-center">
+        <div class="col-12 col-md-4 d-flex gap-2">
+          <input type="number" step="0.01" class="form-control" name="min_salary"
+                 value="{{ request.GET.min_salary }}" placeholder="Min $">
+          <input type="number" step="0.01" class="form-control" name="max_salary"
+                 value="{{ request.GET.max_salary }}" placeholder="Max $">
+        </div>
 
-            <div class="col-12 col-md-5 d-flex flex-wrap align-items-center gap-3">
-              <div class="small text-muted">Work Mode:</div>
-              <label class="form-check">
-                <input class="form-check-input" type="checkbox" name="remote_type" value="ON"
-                       {% if 'ON' in selected_remote_types %}checked{% endif %}>
-                <span class="form-check-label">On-site</span>
-              </label>
-              <label class="form-check">
-                <input class="form-check-input" type="checkbox" name="remote_type" value="RE"
-                       {% if 'RE' in selected_remote_types %}checked{% endif %}>
-                <span class="form-check-label">Remote</span>
-              </label>
-              <label class="form-check">
-                <input class="form-check-input" type="checkbox" name="remote_type" value="HY"
-                       {% if 'HY' in selected_remote_types %}checked{% endif %}>
-                <span class="form-check-label">Hybrid</span>
-              </label>
-            </div>
+        <div class="col-12 col-md-5 d-flex flex-wrap align-items-center gap-3">
+          <div class="small text-muted">Work Mode:</div>
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="remote_type" value="ON"
+                   {% if 'ON' in selected_remote_types %}checked{% endif %}>
+            <span class="form-check-label">On-site</span>
+          </label>
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="remote_type" value="RE"
+                   {% if 'RE' in selected_remote_types %}checked{% endif %}>
+            <span class="form-check-label">Remote</span>
+          </label>
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" name="remote_type" value="HY"
+                   {% if 'HY' in selected_remote_types %}checked{% endif %}>
+            <span class="form-check-label">Hybrid</span>
+          </label>
+        </div>
 
-            <div class="col-12 col-md-3 d-flex flex-wrap align-items-center gap-3">
-              <div class="small text-muted">Visa:</div>
-              <label class="form-check">
-                <input class="form-check-input" type="radio" name="visa" value=""
-                       {% if not selected_visa %}checked{% endif %}>
-                <span class="form-check-label">Either</span>
-              </label>
-              <label class="form-check">
-                <input class="form-check-input" type="radio" name="visa" value="YES"
-                       {% if selected_visa == 'YES' %}checked{% endif %}>
-                <span class="form-check-label">Yes</span>
-              </label>
-              <label class="form-check">
-                <input class="form-check-input" type="radio" name="visa" value="NO"
-                       {% if selected_visa == 'NO' %}checked{% endif %}>
-                <span class="form-check-label">No</span>
-              </label>
-            </div>
-          </div>
+        <div class="col-12 col-md-3 d-flex flex-wrap align-items-center gap-3">
+          <div class="small text-muted">Visa:</div>
+          <label class="form-check">
+            <input class="form-check-input" type="radio" name="visa" value=""
+                   {% if not selected_visa %}checked{% endif %}>
+            <span class="form-check-label">Either</span>
+          </label>
+          <label class="form-check">
+            <input class="form-check-input" type="radio" name="visa" value="YES"
+                   {% if selected_visa == 'YES' %}checked{% endif %}>
+            <span class="form-check-label">Yes</span>
+          </label>
+          <label class="form-check">
+            <input class="form-check-input" type="radio" name="visa" value="NO"
+                   {% if selected_visa == 'NO' %}checked{% endif %}>
+            <span class="form-check-label">No</span>
+          </label>
+        </div>
+      </div>
 
-          <div class="row g-2 mt-3">
-            <div class="col-12 d-flex gap-2">
-              <button class="btn bg-dark text-white" type="submit">Search</button>
-              <a class="btn btn-outline-secondary" href="{% url 'job_list' %}">Reset</a>
-            </div>
-          </div>
-        </form>
+      <div class="row g-2 mt-3">
+        <div class="col-12 d-flex gap-2">
+          <button class="btn bg-dark text-white" type="submit">Search</button>
+          <a class="btn btn-outline-secondary" href="{% url 'job_list' %}">Reset</a>
+        </div>
+      </div>
+    </form>
 
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xxl-4 g-4 mt-2">
+    <!-- Side-by-side layout -->
+    <div class="row mt-4">
+      <!-- Job cards on the left -->
+      <div class="col-lg-8">
+        <div class="row row-cols-1 row-cols-sm-2 g-4">
           {% for job in jobs %}
             <div class="col">
               <div class="card h-100 text-center position-relative">
-                {% if job.my_application %}
-                  {% if job.my_application.status == 'interview' %}
-                    <div class="alert alert-warning text-center rounded-0 mb-0 py-2 fw-semibold">
-                      You’ve been invited to an interview for this position!
-                    </div>
-                  {% elif job.my_application.status == 'offer' %}
-                    <div class="alert alert-success text-center rounded-0 mb-0 py-2 fw-semibold">
-                      Congratulations! You’ve received an offer!
-                    </div>
-                  {% elif job.my_application.status == 'review' %}
-                    <div class="alert alert-info text-center rounded-0 mb-0 py-2 fw-semibold text-dark">
-                      Your application is currently under review.
-                    </div>
-                  {% elif job.my_application.status == 'closed' %}
-                    <div class="alert alert-danger text-center rounded-0 mb-0 py-2 fw-semibold">
-                      Your application has been closed.
-                    </div>
-                  {% endif %}
-                {% endif %}
-
                 <div class="card-body p-3">
                   <h6 class="text-muted mb-1">{{ job.company_name }}</h6>
                   <h5 class="mb-1">{{ job.title }}</h5>
-                  <div class="small text-muted mb-2">{{ job.location }}</div>
+                  <div class="small text-muted mb-2">{{ job.city }}</div>
 
                   <div class="mb-2">
                     <span class="badge bg-secondary">{{ job.get_job_type_display }}</span>
@@ -123,57 +105,18 @@
                     {% if job.remote_type %}
                       <span class="badge bg-dark">{{ job.get_remote_type_display }}</span>
                     {% endif %}
-                </div>
+                  </div>
 
-                {% if job.salary_min or job.salary_max %}
-                  <div class="small mb-3">
-                    ${{ job.salary_min|default:"?" }} – ${{ job.salary_max|default:"?" }}
-                  </div>
-                {% endif %}
-                
-                {% if job.my_application %}
-                  <div class="small mb-2">
-                    <strong>Status:</strong>
-                    <span class="badge
-                      {% if job.my_application.status == 'applied' %} bg-secondary
-                      {% elif job.my_application.status == 'review' %} bg-info text-dark
-                      {% elif job.my_application.status == 'interview' %} bg-warning text-dark
-                      {% elif job.my_application.status == 'offer' %} bg-success
-                      {% elif job.my_application.status == 'closed' %} bg-danger
-                      {% else %} bg-dark
-                      {% endif %}
-                    ">
-                      {{ job.my_application.get_status_display }}
-                    </span>
-                  </div>
-                  <div class="small text-success mb-1">
-                    <i class="bi bi-check-square"></i>
-                    Applied on {{ job.my_application.applied_at|date:"M j, Y, g:i a T" }}
-                  </div>
-                {% endif %}
+                  {% if job.salary_min or job.salary_max %}
+                    <div class="small mb-3">
+                      ${{ job.salary_min|default:"?" }} – ${{ job.salary_max|default:"?" }}
+                    </div>
+                  {% endif %}
 
-                <div class="mt-auto">
-                  <div class="d-flex gap-1">
-                    <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white">
-                      View Details
-                    </a>
-                    {% if user.is_authenticated %}
-                      {% if user.userprofile.role == 'JOB_SEEKER' %}
-                        {% if job.my_application %}
-                          <span class="btn btn-success btn-sm">Applied</span>
-                        {% else %}
-                          <a href="{% url 'job_detail' job.pk %}" class="btn btn-primary btn-sm">Apply</a>
-                        {% endif %}
-                      {% elif user.userprofile.role == 'RECRUITER' and user.recruiter_profile == job.recruiter %}
-                        <a href="{% url 'job_edit' job.pk %}" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="{% url 'job_delete' job.pk %}" class="btn btn-danger btn-sm">Delete</a>
-                      {% endif %}
-                    {% else %}
-                      <a href="{% url 'accounts.login' %}?next={% url 'job_detail' job.pk %}" class="btn btn-primary btn-sm">Apply</a>
-                    {% endif %}
+                  <div class="mt-auto">
+                    <a href="{% url 'job_detail' job.pk %}" class="btn bg-dark text-white btn-sm">View Details</a>
                   </div>
                 </div>
-              </div>
               </div>
             </div>
           {% empty %}
@@ -182,33 +125,94 @@
             </div>
           {% endfor %}
         </div>
+      </div>
 
-        {% if is_paginated %}
-          <nav class="mt-3">
-            <ul class="pagination">
-              {% if page_obj.has_previous %}
-                <li class="page-item">
-                  <a class="page-link"
-                     href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">
-                    Prev
-                  </a>
-                </li>
-              {% endif %}
-              <li class="page-item disabled">
-                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-              </li>
-              {% if page_obj.has_next %}
-                <li class="page-item">
-                  <a class="page-link"
-                     href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">
-                    Next
-                  </a>
-                </li>
-              {% endif %}
-            </ul>
-          </nav>
-        {% endif %}
+      <!-- Map on the right -->
+      <div class="col-lg-4">
+        <h5>View Jobs Near Me</h5>
+        <div id="map" style="height: 500px; width: 100%; border-radius: 10px;"></div>
+      </div>
     </div>
+
+    {% if is_paginated %}
+      <nav class="mt-3">
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">
+                Prev
+              </a>
+            </li>
+          {% endif %}
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">
+                Next
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
   </div>
 </div>
+
+<script>
+  function initMap() {
+    const map = new google.maps.Map(document.getElementById("map"), {
+      zoom: 11,
+      center: { lat: 33.75, lng: 84.39 }, // default center 
+    });
+
+    const jobs = [ 
+      {% for job in jobs %}
+        {% if job.lat and job.lng %}
+          {
+            title: "{{ job.title|escapejs }}",
+            location: "{{ job.full_address|escapejs }}",
+            lat: {{ job.lat }},
+            lng: {{ job.lng }},
+            url: "{% url 'job_detail' job.pk %}"
+          }{% if not forloop.last %},{% endif %}
+        {% endif %}
+      {% endfor %}
+    ];
+
+    const bounds = new google.maps.LatLngBounds();
+
+    jobs.forEach((job) => {
+      const marker = new google.maps.Marker({
+        position: { lat: job.lat, lng: job.lng },
+        map,
+        title: job.title,
+      });
+
+      bounds.extend(marker.position);
+
+      const infowindow = new google.maps.InfoWindow({
+        content: `<div style='min-width:200px'>
+                    <strong>${job.title}</strong><br>
+                    ${job.location}<br>
+                    <a href='${job.url}' target='_blank'>View Details</a>
+                  </div>`
+      });
+
+      marker.addListener("click", () => {
+        infowindow.open(map, marker);
+      });
+    });
+
+    if (jobs.length > 0) {
+      map.fitBounds(bounds);
+    }
+  }
+</script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap">
+</script>
 {% endblock content %}

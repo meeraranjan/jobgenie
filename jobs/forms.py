@@ -4,7 +4,7 @@ from .models import Job
 class JobFilterForm(forms.Form):
     title = forms.CharField(required=False)
     skills = forms.CharField(required=False, help_text="Separate skills with comma or space")
-    location = forms.CharField(required=False)
+    city = forms.CharField(required=False, label="City")
     min_salary = forms.DecimalField(required=False, min_value=0)
     max_salary = forms.DecimalField(required=False, min_value=0)
     job_type = forms.MultipleChoiceField(
@@ -24,7 +24,7 @@ class JobForm(forms.ModelForm):
         fields = [
             "title",
             "skills",
-            "location",
+            'street', 'apartment', 'city', 'state', 'postal_code', 'country',
             "salary_min",
             "salary_max",
             "job_type",

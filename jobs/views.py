@@ -13,6 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms import JobForm
 from django.core.exceptions import PermissionDenied
 from .forms import JobFilterForm
+from django.conf import settings
 
 
 class JobListView(ListView):
@@ -30,8 +31,8 @@ class JobListView(ListView):
         if g.get('title'):
             qs = qs.filter(title__icontains=g['title'])
 
-        if g.get('location'):
-            qs = qs.filter(location__icontains=g['location'])
+        if g.get('city'):
+            qs = qs.filter(city__icontains=g['city'])
 
         if g.get('skills'):
             raw = g['skills'].replace(',', ' ')
@@ -73,6 +74,7 @@ class JobListView(ListView):
         ctx['filter_form'] = JobFilterForm(g or None)
         ctx['selected_remote_types'] = g.getlist('remote_type')
         ctx['selected_visa'] = g.get('visa', '')
+        ctx['GOOGLE_MAPS_API_KEY'] = settings.GOOGLE_MAPS_API_KEY
         return ctx
 
 

@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 from recruiters.models import Recruiter
 from django.urls import reverse
+from .utils import geocode_address
+
 
 class Job(models.Model):
     JOB_TYPES = [
@@ -34,7 +36,13 @@ class Job(models.Model):
     title = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255, blank=True, default="")
     skills = models.TextField(help_text="List required skills, separated by commas", blank=True, default="")
-    location = models.CharField(max_length=255)
+    street = models.CharField(max_length=255, blank=True)
+    apartment = models.CharField(max_length=50, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    
     salary_min = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     salary_max = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     job_type = models.CharField(max_length=2, choices=JOB_TYPES)
@@ -43,21 +51,49 @@ class Job(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    lat = models.FloatField(null=True, blank=True)
+    lng = models.FloatField(null=True, blank=True)
 
     @property
     def skill_list(self):
         return [s.strip() for s in self.skills.split(',')] if self.skills else []
+    
+    @property
+    def full_address(self):
+        """Return a combined address string."""
+        parts = [self.street, self.apartment, self.city, self.state, self.postal_code]
+        return ", ".join([p for p in parts if p])
+    
+    def save(self, *args, **kwargs):
+        """Geocode the full address if lat/lng are missing or address changed."""
+        address = self.full_address
+
+        # Only geocode if there's an address and lat/lng not set or changed
+        if address:
+            old = None
+            if self.pk:
+                old = Job.objects.filter(pk=self.pk).first()
+
+            # If old address differs, or we have no coordinates yet
+            if not old or old.full_address != address or not (self.lat and self.lng):
+                lat, lng = geocode_address(address)
+                if lat and lng:
+                    self.lat = lat
+                    self.lng = lng
+
+        super().save(*args, **kwargs)
+
 
     class Meta:
         indexes = [
             models.Index(fields=['job_type']),
             models.Index(fields=['remote_type']),
-            models.Index(fields=['location']),
+            models.Index(fields=['city']),
         ]
         ordering = ['-created_at']
-
+    
     def __str__(self):
-        return f"{self.title} ({self.location})"
+        return f"{self.title} ({self.city})"
 
 class Application(models.Model):
     STATUS_CHOICES = [

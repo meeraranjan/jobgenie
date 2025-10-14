@@ -6,9 +6,9 @@ import csv
 
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
-    list_display = ('title', 'recruiter', 'location', 'job_type', 'visa_sponsorship', 'created_at')
-    list_filter  = ('job_type', 'visa_sponsorship', 'location')
-    search_fields = ('title', 'skills', 'location', 'recruiter_company')
+    list_display = ('title', 'recruiter', 'city', 'job_type', 'visa_sponsorship', 'created_at')
+    list_filter  = ('job_type', 'visa_sponsorship', 'city')
+    search_fields = ('title', 'skills', 'city', 'recruiter_company')
     actions = ['export_jobs_to_csv']
 
     @admin.action(description="Export selected jobs to CSV")
@@ -19,7 +19,7 @@ class JobAdmin(admin.ModelAdmin):
 
         writer = csv.writer(response)
         writer.writerow([
-            'Title', 'Recruiter', 'Company', 'Location', 'Job Type',
+            'Title', 'Recruiter', 'Company', 'Street', 'Job Type',
             'Visa Sponsorship', 'Remote Type', 'Salary Min', 'Salary Max', 'Created At'
         ])
 
@@ -28,7 +28,7 @@ class JobAdmin(admin.ModelAdmin):
                 job.title,
                 getattr(job.recruiter, 'user', None),  
                 getattr(job, 'company_name', ''),      
-                job.location,
+                job.city,
                 job.job_type,
                 job.visa_sponsorship,
                 getattr(job, 'remote_type', ''),

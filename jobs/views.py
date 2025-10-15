@@ -15,12 +15,44 @@ from django.core.exceptions import PermissionDenied
 from .forms import JobFilterForm
 from django.conf import settings
 
+from math import radians, sin, cos, asin, sqrt
+from .utils import geocode_address
+
+
+def haversine_km(lat1, lng1, lat2, lng2):
+    if None in (lat1, lng1, lat2, lng2):
+        return None
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlng = radians(lng2 - lng1)
+    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
+    c = 2 * asin(sqrt(a))
+    return R * c
 
 class JobListView(ListView):
     model = Job
     template_name = 'jobs/job_list.html'
     context_object_name = 'jobs'
     paginate_by = 12
+
+    def _center_from_request(self, g):
+        lat = (g.get('user_lat') or '').strip()
+        lng = (g.get('user_lng') or '').strip()
+        if lat and lng:
+            try:
+                return float(lat), float(lng)
+            except ValueError:
+                pass
+
+        city = (g.get('city') or '').strip()
+        if city:
+            latlng = geocode_address(city)
+            if latlng and all(latlng):
+                try:
+                    return float(latlng[0]), float(latlng[1])
+                except ValueError:
+                    pass
+        return None
 
     def get_queryset(self):
         qs = Job.objects.all().order_by('-created_at')
@@ -58,6 +90,36 @@ class JobListView(ListView):
             qs = qs.filter(Q(salary_max__isnull=True) | Q(salary_max__gte=min_salary))
         if max_salary:
             qs = qs.filter(Q(salary_min__isnull=True) | Q(salary_min__lte=max_salary))
+
+        radius = (g.get('radius_km') or '').strip()
+        center = None
+        if radius:
+            center = self._center_from_request(g)
+
+        if center and radius:
+            try:
+                user_lat, user_lng = center
+                radius_km = float(radius)
+
+                delta_lat = radius_km / 111.0
+                cos_lat = max(0.1, cos(radians(user_lat)))
+                delta_lng = radius_km / (111.0 * cos_lat)
+
+                approx = (qs.exclude(lat__isnull=True)
+                            .exclude(lng__isnull=True)
+                            .filter(lat__gte=user_lat - delta_lat,
+                                    lat__lte=user_lat + delta_lat,
+                                    lng__gte=user_lng - delta_lng,
+                                    lng__lte=user_lng + delta_lng))
+
+                keep_ids = []
+                for j in approx.only('id', 'lat', 'lng'):
+                    d = haversine_km(user_lat, user_lng, j.lat, j.lng)
+                    if d is not None and d <= radius_km:
+                        keep_ids.append(j.id)
+                qs = qs.filter(id__in=keep_ids)
+            except ValueError:
+                pass
         
         # Add application status for authenticated job seekers
         if user.is_authenticated and getattr(user.userprofile, 'role', None) == 'JOB_SEEKER':
@@ -94,7 +156,6 @@ class JobDetailView(DetailView):
 @login_required
 @require_POST
 def apply_to_job(request, pk):
-    # Check if user is a job seeker
     if not hasattr(request.user, 'userprofile') or request.user.userprofile.role != 'JOB_SEEKER':
         messages.error(request, "Only job seekers can apply to jobs.")
         return redirect("job_detail", pk=pk)

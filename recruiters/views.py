@@ -51,6 +51,8 @@ class RecruiterDashboardView(LoginRequiredMixin, TemplateView):
             }
         context["job_pipelines"] = job_pipelines
 
+        # No recommendations on dashboard per request
+
         return context
     
 class BecomeRecruiterView(View):

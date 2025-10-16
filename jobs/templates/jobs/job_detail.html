@@ -48,6 +48,27 @@
             </div>
           {% endif %}
           
+          {% if user.is_authenticated and user.recruiter_profile == job.recruiter %}
+            <hr>
+            <h5 class="mb-2">Recommended Candidates</h5>
+            {% if job_recommendations %}
+              <ul class="list-group list-group-flush">
+                {% for profile, score in job_recommendations %}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                      <div class="fw-semibold">{{ profile.first_name }} {{ profile.last_name }}</div>
+                      <div class="text-muted small">{{ profile.headline }}</div>
+                      <div class="text-muted small">{{ profile.skills|truncatechars:120 }}</div>
+                    </div>
+                    <span class="badge bg-primary rounded-pill">{{ score|floatformat:2 }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted">No recommendations yet.</p>
+            {% endif %}
+          {% endif %}
+
         </div>
       </div>
 

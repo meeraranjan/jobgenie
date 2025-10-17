@@ -55,7 +55,7 @@
 
 {% for job in jobs %}
   <div class="mb-5">
-    <h4 class="mb-3 text-center fw-bold">{{ job.title }} ({{ job.location }})</h4>
+    <h4 class="mb-3 text-center fw-bold">{{ job.title }} ({{ job.city }})</h4>
     <hr class="w-50 mx-auto mb-4">
 
     {% with pipeline=job_pipelines|get_item:job.id %}

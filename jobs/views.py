@@ -14,6 +14,7 @@ from .forms import JobForm
 from django.core.exceptions import PermissionDenied
 from .forms import JobFilterForm
 from django.conf import settings
+from recruiters.recommendations import recommend_candidates_for_job
 
 
 class JobListView(ListView):
@@ -89,6 +90,10 @@ class JobDetailView(DetailView):
             ctx['application'] = Application.objects.filter(
                 job=self.object, candidate=self.request.user
             ).first()
+        # Recommendations are visible to the owning recruiter only
+        recruiter = getattr(self.request.user, "recruiter_profile", None)
+        if recruiter and self.object.recruiter_id == recruiter.id:
+            ctx['job_recommendations'] = recommend_candidates_for_job(self.object, limit=5)
         return ctx
 
 @login_required

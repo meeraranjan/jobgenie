@@ -1,16 +1,25 @@
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
-from django.views.generic import CreateView, TemplateView, DetailView
+from django.views.generic import CreateView, TemplateView, DetailView, ListView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django.db.models import Q
+from functools import reduce
+import operator
+import re
 
 from .models import Recruiter
-from .forms import RecruiterForm
+from .forms import RecruiterForm, CandidateSearchForm
 from jobs.models import Job, Application
 from profiles.models import JobSeekerProfile
+try:
+    from profiles.models import Project
+except Exception:
+    Project = None
+
 class RecruiterSignupView(LoginRequiredMixin, CreateView):
     model = Recruiter
     form_class = RecruiterForm
@@ -114,3 +123,63 @@ class RecruiterApplicationDetailView(LoginRequiredMixin, DetailView):
             context["profile"] = None
 
         return context
+    
+def _tokens(s: str):
+    if not s:
+        return []
+    return [t.strip() for t in re.split(r"[,\s]+", s) if t.strip()]
+
+class CandidateSearchView(ListView):
+    template_name = "recruiters/candidate_search.html"
+    context_object_name = "candidates"
+    paginate_by = 20
+
+    def get_queryset(self):
+        g = self.request.GET
+        qs = (
+            JobSeekerProfile.objects
+            .filter(is_public=True)
+            .select_related("user")
+            .order_by("last_name", "first_name")
+        )
+        skill_tokens = _tokens(g.get("skills"))
+        if skill_tokens:
+            and_clauses = []
+            for t in skill_tokens:
+                and_clauses.append(
+                    Q(skills__icontains=t) |
+                    Q(headline__icontains=t) |
+                    Q(work_experience__icontains=t)
+                )
+            qs = qs.filter(reduce(operator.and_, and_clauses))
+
+        loc = g.get("city")
+        if loc:
+            qs = qs.filter(
+                Q(city__icontains=loc) |
+                Q(state__icontains=loc) |
+                Q(country__icontains=loc)
+            )
+
+        proj = g.get("project")
+        if proj:
+            if Project is not None:
+                qs = qs.filter(
+                    Q(projects__title__icontains=proj) |
+                    Q(projects__description__icontains=proj) |
+                    Q(projects__skills__icontains=proj)
+                ).distinct()
+            else:
+                qs = qs.filter(
+                    Q(links__icontains=proj) |
+                    Q(work_experience__icontains=proj) |
+                    Q(headline__icontains=proj)
+                )
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["form"] = CandidateSearchForm(self.request.GET or None)
+        return ctx
+    

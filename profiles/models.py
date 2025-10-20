@@ -56,4 +56,22 @@ class JobSeekerProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.headline}"
+    
+class Project(models.Model):
+    profile = models.ForeignKey(
+        JobSeekerProfile, on_delete=models.CASCADE, related_name="projects"
+    )
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    url = models.URLField(blank=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    skills = models.CharField(max_length=300, blank=True,
+                              help_text="Comma or space separated")
+
+    class Meta:
+        ordering = ["-start_date", "-id"]
+
+    def __str__(self):
+        return f"{self.title} – {self.profile.user.username}"
 

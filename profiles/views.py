@@ -4,7 +4,7 @@ from .decorators import recruiter_required
 # # Create your views here.
 
 from .forms import JobSeekerProfileForm
-from .models import JobSeekerProfile
+from .models import JobSeekerProfile, Project
 
 
 @login_required

@@ -10,6 +10,11 @@
     <a href="{% url 'job_create' %}" class="btn btn-success">+ Post a New Job</a>
   </div>
 
+  <div class="mb-3 d-flex gap-2">
+    <a href="{% url 'job_create' %}" class="btn btn-success">+ Post a New Job</a>
+    <a href="{% url 'recruiters:candidate_search' %}" class="btn btn-outline-primary">Search Candidates</a>
+  </div>
+
   {% if jobs %}
     <div class="table-responsive">
       <table class="table align-middle table-striped">

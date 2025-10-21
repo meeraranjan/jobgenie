@@ -4,6 +4,11 @@
     <h1 class="text-2xl font-bold">{{ profile.first_name }} {{ profile.last_name }}</h1>
     <h2 class="text-xl text-gray-700">{{ profile.headline }}</h2>
 
+    
+    {% if profile.city %}
+        <p class="text-muted mt-1"><i class="bi bi-geo-alt-fill"></i> {{ profile.city }}</p>
+    {% endif %}
+
     <section class="mt-4">
         <h3 class="font-semibold">Skills</h3>
         <p>{{ profile.skills }}</p>

@@ -163,18 +163,11 @@ class CandidateSearchView(ListView):
 
         proj = g.get("project")
         if proj:
-            if Project is not None:
-                qs = qs.filter(
-                    Q(projects__title__icontains=proj) |
-                    Q(projects__description__icontains=proj) |
-                    Q(projects__skills__icontains=proj)
-                ).distinct()
-            else:
-                qs = qs.filter(
-                    Q(links__icontains=proj) |
-                    Q(work_experience__icontains=proj) |
-                    Q(headline__icontains=proj)
-                )
+            qs = qs.filter(
+                Q(work_experience__icontains=proj) |
+                Q(headline__icontains=proj) |
+                Q(education__icontains=proj)
+            )
 
         return qs
 

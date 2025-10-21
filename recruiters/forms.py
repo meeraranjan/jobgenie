@@ -29,7 +29,10 @@ class CandidateSearchForm(forms.Form):
     )
     project = forms.CharField(
         required=False,
-        label="Project keyword",
-        help_text="Title/description keyword",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "ex: chatbot"})
+        label="Work Experience Keyword",
+        help_text="Search by roles, descriptions, or project titles",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Search work experience (e.g. chatbot, data pipeline, API dev)"
+    })
     )

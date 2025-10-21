@@ -23,11 +23,15 @@
         </div>
 
         <div class="col-12 col-md-4">
-            <label class="form-label">{{ form.project.label }}</label>
-             {{ form.project }}
-            {% if form.project.help_text %}
-        <div class="form-text">{{ form.project.help_text }}</div>
-            {% endif %}
+          <label class="form-label">Projects</label>
+          <input 
+            type="text" 
+            name="project" 
+            value="{{ request.GET.project }}" 
+            class="form-control" 
+            placeholder="Search Work Experience"
+          />
+          <div class="form-text">Find candidates by keywords in their work experience</div>
         </div>
 
         <div class="col-12 mt-2">

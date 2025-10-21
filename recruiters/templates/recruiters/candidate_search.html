@@ -14,13 +14,30 @@
             {% endif %}
         </div>
 
-            <div class="col-12 col-md-4">
+        <div class="col-12 col-md-4">
             <label class="form-label">{{ form.city.label }}</label>
             {{ form.city }}
             {% if form.city.help_text %}
             <div class="form-text">{{ form.city.help_text }}</div>
             {% endif %}
         </div>
+
+        
+        <input type="hidden" name="user_lat" id="user_lat" value="{{ request.GET.user_lat }}">
+        <input type="hidden" name="user_lng" id="user_lng" value="{{ request.GET.user_lng }}">
+
+        <div class="col-12 col-md-3">
+          <label class="form-label">Radius (km)</label>
+        <div class="input-group">
+          <input type="number" min="1" step="1" class="form-control"
+                name="radius_km" value="{{ request.GET.radius_km }}" placeholder="Radius (km)">
+          <button type="button" id="useMyLocationBtn" class="btn btn-outline-secondary"
+                  style="white-space:nowrap; min-width:110px;">
+            Use my location
+          </button>
+        </div>
+        <div class="form-text">Search candidates within a radius from your location</div>
+      </div>
 
         <div class="col-12 col-md-4">
           <label class="form-label">Projects</label>
@@ -92,4 +109,23 @@
     <div class="alert alert-light border">No candidates with current filters. Try different keywords.</div>
   {% endif %}
 </div>
+<script>
+document.getElementById('useMyLocationBtn')?.addEventListener('click', function () {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      document.getElementById('user_lat').value = pos.coords.latitude;
+      document.getElementById('user_lng').value = pos.coords.longitude;
+      alert("Location set. Click 'Search' to find nearby candidates.");
+    },
+    function (err) {
+      alert('Could not get your location: ' + err.message);
+    }
+  );
+});
+</script>
+
 {% endblock %}

@@ -45,6 +45,31 @@
                 {{ form.is_public }}
                 {{ form.is_public.label_tag }}
             </div>
+            
+            <div class="mb-3">
+                {{ form.street.label_tag }}
+                {{ form.street }}
+            </div>
+            <div class="mb-3">
+                {{ form.apartment.label_tag }}
+                {{ form.apartment }}
+            </div>
+            <div class="mb-3">
+                {{ form.city.label_tag }}
+                {{ form.city }}
+            </div>
+            <div class="mb-3">
+                {{ form.state.label_tag }}
+                {{ form.state }}
+            </div>
+            <div class="mb-3">
+                {{ form.postal_code.label_tag }}
+                {{ form.postal_code }}
+            </div>
+            <div class="mb-3">
+                {{ form.country.label_tag }}
+                {{ form.country }}
+            </div>
 
             <button type="submit" class="btn btn-success mt-3">Save Changes</button>
             <a href="{% url 'profiles:view_profile' %}" class="btn btn-secondary mt-3 ms-2">Cancel</a>

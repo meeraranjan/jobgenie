@@ -18,6 +18,14 @@
             <p><strong>Work Experience:</strong> {{ profile.work_experience|linebreaksbr }}</p>
             <p><strong>Links:</strong> {{ profile.links|linebreaksbr }}</p>
             <p><strong>Profile Visibility:</strong> {{ profile.is_public|yesno:"Public,Private" }}</p>
+            <p><strong>Location:</strong>
+                {{ profile.street }},
+                {{ profile.apartment }},
+                {{ profile.city }},
+                {{ profile.state }},
+                {{ profile.postal_code }},
+                {{ profile.country }}
+            </p>
 
             <a href="{% url 'profiles:edit_profile' %}" class="btn btn-primary mt-3">Edit Profile</a>
         

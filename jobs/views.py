@@ -122,12 +122,13 @@ class JobListView(ListView):
             except ValueError:
                 pass
         
-        # Add application status for authenticated job seekers
-        if user.is_authenticated and getattr(user.userprofile, 'role', None) == 'JOB_SEEKER':
-            applied = Application.objects.filter(candidate=user)
-            applied_dict = {app.job_id: app for app in applied}
-            for job in qs:
-                job.my_application = applied_dict.get(job.id)
+        if user.is_authenticated:
+            userprofile = getattr(user, "userprofile", None)
+            if userprofile and getattr(userprofile, "role", None) == "JOB_SEEKER":
+                applied = Application.objects.filter(candidate=user)
+                applied_dict = {app.job_id: app for app in applied}
+                for job in qs:
+                    job.my_application = applied_dict.get(job.id)
 
         return qs
 

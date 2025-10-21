@@ -16,3 +16,23 @@ class RecruiterForm(forms.ModelForm):
             }),
         }
 
+class CandidateSearchForm(forms.Form):
+    skills = forms.CharField(
+        required=False,
+        label="Skills / keywords",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Python, SQL, Java"})
+    )
+    city = forms.CharField(
+        required=False,
+        label="City",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "City"})
+    )
+    project = forms.CharField(
+        required=False,
+        label="Work Experience Keyword",
+        help_text="Search by roles, descriptions, or project titles",
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Search work experience (e.g. chatbot, data pipeline, API dev)"
+    })
+    )

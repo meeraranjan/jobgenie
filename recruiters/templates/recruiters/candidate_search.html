@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'recruiters:dashboard' %}" class="btn btn-link ps-0 mb-3">← Back to Dashboard</a>
+  <h3 class="mb-3">Search Candidates</h3>
+
+    <form method="get" class="mb-3 card p-3">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+            <label class="form-label">{{ form.skills.label }}</label>
+            {{ form.skills }}
+            {% if form.skills.help_text %}
+        <div class="form-text">{{ form.skills.help_text }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-12 col-md-4">
+            <label class="form-label">{{ form.city.label }}</label>
+            {{ form.city }}
+            {% if form.city.help_text %}
+            <div class="form-text">{{ form.city.help_text }}</div>
+            {% endif %}
+        </div>
+
+        
+        <input type="hidden" name="user_lat" id="user_lat" value="{{ request.GET.user_lat }}">
+        <input type="hidden" name="user_lng" id="user_lng" value="{{ request.GET.user_lng }}">
+
+        <div class="col-12 col-md-3">
+          <label class="form-label">Radius (km)</label>
+        <div class="input-group">
+          <input type="number" min="1" step="1" class="form-control"
+                name="radius_km" value="{{ request.GET.radius_km }}" placeholder="Radius (km)">
+          <button type="button" id="useMyLocationBtn" class="btn btn-outline-secondary"
+                  style="white-space:nowrap; min-width:110px;">
+            Use my location
+          </button>
+        </div>
+        <div class="form-text">Search candidates within a radius from your location</div>
+      </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label">Projects</label>
+          <input 
+            type="text" 
+            name="project" 
+            value="{{ request.GET.project }}" 
+            class="form-control" 
+            placeholder="Search Work Experience"
+          />
+          <div class="form-text">Find candidates by keywords in their work experience</div>
+        </div>
+
+        <div class="col-12 mt-2">
+        <button class="btn bg-dark text-white" type="submit">Search</button>
+        <a class="btn btn-outline-secondary" href="{% url 'recruiters:candidate_search' %}">Reset</a>
+        </div>
+    </div>
+    </form>
+
+  {% if candidates %}
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+      {% for c in candidates %}
+        <div class="col">
+          <div class="card p-3 h-100">
+            <h5 class="mb-1">
+              {% if c.first_name or c.last_name %}
+                {{ c.first_name }} {{ c.last_name }}
+              {% else %}
+                {{ c.user.username }}
+              {% endif %}
+            </h5>
+            {% if c.headline %}<div class="text-muted mb-1">{{ c.headline }}</div>{% endif %}
+            <div class="small text-muted mb-2">
+              {{ c.city }}{% if c.state %}, {{ c.state }}{% endif %}{% if c.country %}, {{ c.country }}{% endif %}
+            </div>
+
+            {% if c.skills %}
+              <div class="mb-2"><strong>Skills:</strong> {{ c.skills }}</div>
+            {% endif %}
+            {% if c.links %}
+              <div class="small"><strong>Links:</strong> {{ c.links }}</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+      <nav class="mt-3">
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">Prev</a>
+            </li>
+          {% endif %}
+          <li class="page-item disabled">
+            <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          </li>
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode|cut:'page='|cut:'&page=' }}">Next</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="alert alert-light border">No candidates with current filters. Try different keywords.</div>
+  {% endif %}
+</div>
+<script>
+document.getElementById('useMyLocationBtn')?.addEventListener('click', function () {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      document.getElementById('user_lat').value = pos.coords.latitude;
+      document.getElementById('user_lng').value = pos.coords.longitude;
+      alert("Location set. Click 'Search' to find nearby candidates.");
+    },
+    function (err) {
+      alert('Could not get your location: ' + err.message);
+    }
+  );
+});
+</script>
+
+{% endblock %}

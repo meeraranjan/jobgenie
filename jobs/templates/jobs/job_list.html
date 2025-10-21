@@ -29,6 +29,9 @@
         </div>
       </div>
 
+      <input type="hidden" name="user_lat" id="user_lat" value="{{ request.GET.user_lat }}">
+      <input type="hidden" name="user_lng" id="user_lng" value="{{ request.GET.user_lng }}">
+
       <div class="row g-2 mt-2 align-items-center">
         <div class="col-12 col-md-4 d-flex gap-2">
           <input type="number" step="0.01" class="form-control" name="min_salary"
@@ -37,7 +40,19 @@
                  value="{{ request.GET.max_salary }}" placeholder="Max $">
         </div>
 
-        <div class="col-12 col-md-5 d-flex flex-wrap align-items-center gap-3">
+      <div class="col-12 col-md-4">
+        <div class="input-group">
+          <input type="number" min="1" step="1" class="form-control"
+              name="radius_km" value="{{ radius_km }}" placeholder="Radius (km)">
+          <button type="button" id="useMyLocationBtn"
+              class="btn btn-outline-secondary"
+              style="white-space:nowrap; min-width:110px;">
+            Use my location
+          </button>
+        </div>
+      </div>
+
+        <div class="col-12 col-md-4 d-flex flex-wrap align-items-center gap-3">
           <div class="small text-muted">Work Mode:</div>
           <label class="form-check">
             <input class="form-check-input" type="checkbox" name="remote_type" value="ON"
@@ -84,9 +99,7 @@
       </div>
     </form>
 
-    <!-- Side-by-side layout -->
     <div class="row mt-4">
-      <!-- Job cards on the left -->
       <div class="col-lg-8">
         <div class="row row-cols-1 row-cols-sm-2 g-4">
           {% for job in jobs %}
@@ -215,4 +228,25 @@
 <script async defer
   src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap">
 </script>
+
+<script>
+document.getElementById('useMyLocationBtn')?.addEventListener('click', function () {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      document.getElementById('user_lat').value = pos.coords.latitude;
+      document.getElementById('user_lng').value = pos.coords.longitude;
+      alert("Location set. Click 'Search' to find nearby jobs.");
+    },
+    function (err) {
+      alert('Could not get your location: ' + err.message);
+    }
+  );
+});
+</script>
 {% endblock content %}
+
+

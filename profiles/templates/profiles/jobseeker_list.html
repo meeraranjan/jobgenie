@@ -5,33 +5,102 @@
     <h2 class="mb-4">Job Seekers</h2>
 
     <div class="row">
+    <!-- Left column: Profiles list -->
+    <div class="col-lg-7">
+        <div class="row">
         {% for profile in profiles %}
-        <div class="col-md-6 col-lg-3 mb-4">
+        <div class="col-md-6 mb-4">
             <div class="card h-100 shadow-sm">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">
-                        {{ profile.first_name }} {{ profile.last_name }}
-                    </h5>
-                    <h6 class="card-subtitle mb-2 text-muted">{{ profile.headline }}</h6>
-                    {% if profile.city %}
-                    <p class="text-muted small mb-2">
-                        <i class="bi bi-geo-alt-fill"></i> {{ profile.city }}
-                    </p>
-                    {% endif %}
-                    <label class="form-label small text-muted">Skills</label>
-                    <textarea class="form-control" rows="5" readonly>{{ profile.skills|default_if_none:"" }}</textarea>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">
+                {{ profile.first_name }} {{ profile.last_name }}
+                </h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ profile.headline }}</h6>
+                {% if profile.address %}
+                <p class="text-muted small mb-2">
+                <i class="bi bi-geo-alt-fill"></i> {{ profile.address }}
+                </p>
+                {% endif %}
+                <label class="form-label small text-muted">Skills</label>
+                <textarea class="form-control" rows="5" readonly>{{ profile.skills|default_if_none:"" }}</textarea>
 
-
-                    <a href="{% url 'profiles:jobseeker_detail' profile.pk %}" class="btn btn-outline-primary mt-auto">
-                        View Profile
-                    </a>
-                </div>
+                <a href="{% url 'profiles:jobseeker_detail' profile.pk %}" class="btn btn-outline-primary mt-auto">
+                View Profile
+                </a>
+            </div>
             </div>
         </div>
         {% empty %}
         <p class="text-muted">No public job seekers available.</p>
         {% endfor %}
+        </div>
     </div>
-</div>
 
+    <!-- Right column: Map -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="text-center mb-3">Job Seeker Locations</h5>
+            <div id="map" style="width: 100%; height: 600px; border-radius: 10px;"></div>
+        </div>
+        </div>
+    </div>
+    </div>
+    </div>
+<!-- Google Maps -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}"></script>
+
+<!-- MarkerClusterer (for grouping nearby pins) -->
+<script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+
+<script>
+    function initMap() {
+    const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 4,
+        center: { lat: 39.8283, lng: -98.5795 } // Center of the US
+    });
+
+    const jobseekers = [
+        {% for p in profiles %}
+        {% if p.lat and p.lng %}
+            {
+            name: "{{ p.first_name }} {{ p.last_name }}",
+            headline: "{{ p.headline|escapejs }}",
+            url: "{% url 'profiles:jobseeker_detail' p.pk %}",
+            lat: {{ p.lat }},
+            lng: {{ p.lng }}
+            },
+        {% endif %}
+        {% endfor %}
+    ];
+
+    const markers = jobseekers.map((p) => {
+        const marker = new google.maps.Marker({
+        position: { lat: p.lat, lng: p.lng },
+        title: p.name,
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+        content: `
+            <div style="min-width:200px;">
+            <strong>${p.name}</strong><br>
+            <em>${p.headline}</em><br>
+            <a href="${p.url}" target="_blank">View Profile</a>
+            </div>
+        `
+        });
+
+        marker.addListener("click", () => {
+        infoWindow.open(map, marker);
+        });
+
+        return marker;
+    });
+
+    // Cluster markers
+    new markerClusterer.MarkerClusterer({ map, markers });
+    }
+
+    window.onload = initMap;
+    </script>
 {% endblock %}

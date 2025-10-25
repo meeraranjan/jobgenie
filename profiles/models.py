@@ -2,8 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .utils import geocode_address
-               
+from .utils import geocode_address             
 class UserProfile(models.Model):
     ROLE_CHOICES = (
         ('JOB_SEEKER', 'Job Seeker'),
@@ -26,8 +25,7 @@ class JobSeekerProfile(models.Model):
     links = models.TextField(blank=True)
     is_public = models.BooleanField(default=True)  # privacy
     
-    street = models.CharField(max_length=255, blank=True)
-    apartment = models.CharField(max_length=50, blank=True)
+    address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     postal_code = models.CharField(max_length=20, blank=True)
@@ -37,9 +35,7 @@ class JobSeekerProfile(models.Model):
     
     @property
     def full_address(self):
-        """Combine fields for geocoding."""
-        parts = [self.street, self.apartment, self.city, self.state, self.postal_code, self.country]
-        return ", ".join([p for p in parts if p])
+        return self.address
 
     def save(self, *args, **kwargs):
         """Geocode when address fields change."""

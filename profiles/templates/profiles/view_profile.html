@@ -4,7 +4,7 @@
 <div class="container my-5 profile-view">
     <div class="card shadow-sm p-4">
         {% if profile %}
-           <h2 class="mb-3">
+            <h2 class="mb-3">
             {% if profile.first_name or profile.last_name %}
                 {{ profile.first_name }} {{ profile.last_name }}
             {% else %}
@@ -19,8 +19,7 @@
             <p><strong>Links:</strong> {{ profile.links|linebreaksbr }}</p>
             <p><strong>Profile Visibility:</strong> {{ profile.is_public|yesno:"Public,Private" }}</p>
             <p><strong>Location:</strong>
-                {{ profile.street }},
-                {{ profile.apartment }},
+                {{ profile.address }},
                 {{ profile.city }},
                 {{ profile.state }},
                 {{ profile.postal_code }},

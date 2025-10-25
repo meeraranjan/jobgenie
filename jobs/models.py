@@ -36,8 +36,7 @@ class Job(models.Model):
     title = models.CharField(max_length=255)
     company_name = models.CharField(max_length=255, blank=True, default="")
     skills = models.TextField(help_text="List required skills, separated by commas", blank=True, default="")
-    street = models.CharField(max_length=255, blank=True)
-    apartment = models.CharField(max_length=50, blank=True)
+    address = models.CharField(max_length=255, blank=True, help_text="Type office location or adjust pin on map")
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     postal_code = models.CharField(max_length=20, blank=True)
@@ -60,29 +59,21 @@ class Job(models.Model):
     
     @property
     def full_address(self):
-        """Return a combined address string."""
-        parts = [self.street, self.apartment, self.city, self.state, self.postal_code]
+        """Return a combined address string for display/geocoding."""
+        parts = [self.address, self.city, self.state, self.postal_code, self.country]
         return ", ".join([p for p in parts if p])
-    
+
     def save(self, *args, **kwargs):
-        """Geocode the full address if lat/lng are missing or address changed."""
+        """Geocode automatically if lat/lng are missing or address changed."""
         address = self.full_address
-
-        # Only geocode if there's an address and lat/lng not set or changed
         if address:
-            old = None
-            if self.pk:
-                old = Job.objects.filter(pk=self.pk).first()
-
-            # If old address differs, or we have no coordinates yet
+            old = Job.objects.filter(pk=self.pk).first() if self.pk else None
             if not old or old.full_address != address or not (self.lat and self.lng):
                 lat, lng = geocode_address(address)
                 if lat and lng:
                     self.lat = lat
                     self.lng = lng
-
         super().save(*args, **kwargs)
-
 
     class Meta:
         indexes = [

@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .decorators import recruiter_required
+from django.conf import settings
+
 # # Create your views here.
 
 from .forms import JobSeekerProfileForm
@@ -47,7 +49,11 @@ def edit_profile(request):
 @recruiter_required
 def jobseeker_list(request):
     profiles = JobSeekerProfile.objects.filter(is_public=True)
-    return render(request, 'profiles/jobseeker_list.html', {'profiles': profiles})
+    context = {
+        'profiles': profiles,
+        'GOOGLE_MAPS_API_KEY': settings.GOOGLE_MAPS_API_KEY,  
+    }
+    return render(request, 'profiles/jobseeker_list.html', context)
 
 @recruiter_required
 def jobseeker_detail(request, pk):

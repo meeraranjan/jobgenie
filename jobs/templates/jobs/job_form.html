@@ -14,7 +14,7 @@
     {% if form.non_field_errors %}
       <div class="alert alert-danger">{{ form.non_field_errors }}</div>
     {% endif %}
-    
+
     <form method="post" id="jobForm">
       {% csrf_token %}
 
@@ -103,7 +103,7 @@ function initMap() {
         });
     });
 
-    // Autocomplete
+    // Autocomplete setup
     const addressInput = document.getElementById("id_address");
     autocomplete = new google.maps.places.Autocomplete(addressInput, {
         fields: ["address_components", "geometry"],
@@ -122,6 +122,26 @@ function initMap() {
         map.setCenter(loc);
 
         fillAddressFields(place);
+    });
+    addressInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const address = addressInput.value.trim();
+            if (address) {
+                geocoder.geocode({ address: address }, function(results, status) {
+                    if (status === "OK" && results[0]) {
+                        const loc = results[0].geometry.location;
+                        latField.value = loc.lat();
+                        lngField.value = loc.lng();
+                        marker.setPosition(loc);
+                        map.setCenter(loc);
+                        fillAddressFields(results[0]);
+                    } else {
+                        console.warn("Geocode failed:", status);
+                    }
+                });
+            }
+        }
     });
 }
 

@@ -19,15 +19,20 @@ class JobFilterForm(forms.Form):
     )
     
 class JobForm(forms.ModelForm):
+    lat = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    lng = forms.FloatField(widget=forms.HiddenInput(), required=False)
     class Meta:
         model = Job
         fields = [
             "title",
             "skills",
-            'street', 'apartment', 'city', 'state', 'postal_code', 'country',
+            'address',
+            'city', 'state', 'postal_code', 'country',
             "salary_min",
             "salary_max",
             "job_type",
             "visa_sponsorship",
             "company_name",
+            "lat", 
+            "lng",
         ]

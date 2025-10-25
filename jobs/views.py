@@ -199,6 +199,12 @@ class JobCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return self.object.get_absolute_url()
+    
+    
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['GOOGLE_MAPS_API_KEY'] = settings.GOOGLE_MAPS_API_KEY
+        return ctx
 
 
 class JobUpdateView(LoginRequiredMixin, UpdateView):
@@ -212,6 +218,11 @@ class JobUpdateView(LoginRequiredMixin, UpdateView):
         if obj.recruiter != recruiter:
             raise PermissionDenied("You can only edit your own jobs.")
         return obj
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['GOOGLE_MAPS_API_KEY'] = settings.GOOGLE_MAPS_API_KEY
+        return ctx
 
 
 class JobDeleteView(LoginRequiredMixin, DeleteView):

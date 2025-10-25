@@ -5,52 +5,160 @@
 <div class="p-3">
   <div class="container">
     <div class="row justify-content-center">
-      <div class="col-lg-6">
-        <div class="card p-4">
-          <h3 class="mb-3 text-center">
-            {% if object %}
-              Edit Job
-            {% else %}
-              Post a New Job
-            {% endif %}
-          </h3>
+      <div class="col-lg-8">
+  <div class="card p-4 shadow-sm">
+    <h3 class="mb-3 text-center">
+      {% if object %} Edit Job {% else %} Post a New Job {% endif %}
+    </h3>
 
-          {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-              {{ form.non_field_errors }}
-            </div>
-          {% endif %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+    
+    <form method="post" id="jobForm">
+      {% csrf_token %}
 
-          <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-              <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                  <div class="text-danger small">{{ error }}</div>
-                {% endfor %}
-              </div>
-            {% endfor %}
-
-            <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-dark">
-                {% if object %} Update Job {% else %} Post Job {% endif %}
-              </button>
-              {% if user.is_authenticated and user.userprofile.role == 'RECRUITER' %}
-                <a href="{% url 'recruiters:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
-              {% else %}
-                <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">Cancel</a>
+      <!-- Two-column layout INSIDE the card -->
+      <div class="row">
+        <!-- Left: form fields -->
+        <div class="col-md-6">
+          {% for field in form %}
+            <div class="mb-3">
+              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
               {% endif %}
+              {% for error in field.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
             </div>
-          </form>
+          {% endfor %}
+        </div>
+
+        <!-- Right: Map -->
+        <div class="col-md-6">
+          <h5 class="text-center mb-3">Select Job Location</h5>
+          <div id="map" style="width: 100%; height: 500px; border-radius: 10px;"></div>
         </div>
       </div>
-    </div>
+
+      <style>
+        /* Hide lat/lng fields entirely */
+        #id_lat, #id_lng,
+        label[for="id_lat"], label[for="id_lng"] {
+          display: none !important;
+        }
+      </style>
+
+      <div class="d-grid gap-2 mt-3">
+        <button type="submit" class="btn btn-dark">
+          {% if object %} Update Job {% else %} Post Job {% endif %}
+        </button>
+        {% if user.is_authenticated and user.userprofile.role == 'RECRUITER' %}
+          <a href="{% url 'recruiters:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+        {% else %}
+          <a href="{% url 'job_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        {% endif %}
+      </div>
+    </form>
   </div>
 </div>
+
+<!-- Google Maps API -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
+<script>
+let map, marker, autocomplete, geocoder;
+
+function initMap() {
+    const latField = document.getElementById("id_lat");
+    const lngField = document.getElementById("id_lng");
+
+    const initialLat = parseFloat(latField.value) || 37.7749;
+    const initialLng = parseFloat(lngField.value) || -122.4194;
+    const initialPos = { lat: initialLat, lng: initialLng };
+
+    map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 13,
+        center: initialPos
+    });
+
+    marker = new google.maps.Marker({
+        position: initialPos,
+        map: map,
+        draggable: true
+    });
+
+    geocoder = new google.maps.Geocoder();
+
+    // Update address when marker is dragged
+    marker.addListener('dragend', function() {
+        const pos = marker.getPosition();
+        latField.value = pos.lat();
+        lngField.value = pos.lng();
+        geocoder.geocode({ location: pos }, function(results, status) {
+            if (status === 'OK' && results[0]) {
+                fillAddressFields(results[0]);
+            }
+        });
+    });
+
+    // Autocomplete
+    const addressInput = document.getElementById("id_address");
+    autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        fields: ["address_components", "geometry"],
+        types: ["geocode"]
+    });
+
+    autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) return;
+
+        const loc = place.geometry.location;
+        latField.value = loc.lat();
+        lngField.value = loc.lng();
+
+        marker.setPosition(loc);
+        map.setCenter(loc);
+
+        fillAddressFields(place);
+    });
+}
+
+function fillAddressFields(place) {
+    const comp = place.address_components;
+    if (!comp) return;
+
+    const mapping = {
+        locality: 'id_city',
+        administrative_area_level_1: 'id_state',
+        postal_code: 'id_postal_code',
+        country: 'id_country'
+    };
+
+    // Clear existing address values
+    document.getElementById("id_address").value = '';
+    for (let key in mapping) {
+        const el = document.getElementById(mapping[key]);
+        if (el) el.value = '';
+    }
+
+    // Build full address
+    const addressParts = [];
+    for (let c of comp) {
+        if (c.types.includes('street_number') || c.types.includes('route')) {
+            addressParts.push(c.long_name);
+        }
+        const type = c.types[0];
+        if (mapping[type]) {
+            const el = document.getElementById(mapping[type]);
+            if (el) el.value = c.long_name;
+        }
+    }
+    document.getElementById("id_address").value = addressParts.join(' ');
+}
+
+window.onload = initMap;
+</script>
 
 {% endblock content %}

@@ -22,13 +22,15 @@ def score_candidate_for_job(job, profile: JobSeekerProfile) -> float:
         return 0.0
 
     overlap = job_skills.intersection(candidate_skills)
-    base = len(overlap) / max(len(job_skills), 1)
+    match_ratio = len(overlap) / len(job_skills)  # job-centric match
 
-    # Light remote bonus if job supports remote/hybrid
+    # Optional: remote bonus
     remote_type = getattr(job, 'remote_type', None)
     remote_bonus = 0.05 if remote_type in ('RE', 'HY') else 0.0
 
-    return round(base + remote_bonus, 4)
+    score = match_ratio + remote_bonus
+    return round(score * 100, 2)  # scale to percentage
+
 
 
 def recommend_candidates_for_job(job, limit: int = 5) -> List[Tuple[JobSeekerProfile, float]]:
@@ -36,10 +38,27 @@ def recommend_candidates_for_job(job, limit: int = 5) -> List[Tuple[JobSeekerPro
     scored: List[Tuple[JobSeekerProfile, float]] = []
     for profile in candidates:
         score = score_candidate_for_job(job, profile)
-        if score > 0:
-            scored.append((profile, score))
+        if score > 20:
+            scored.append((profile, round(score)))
 
     scored.sort(key=lambda x: x[1], reverse=True)
     return scored[:limit]
+
+def recommend_jobs_for_candidate(profile: JobSeekerProfile, limit: int = 10):
+    """Recommend jobs for a candidate based on skill match."""
+    from jobs.models import Job
+    
+    jobs = Job.objects.all()
+    scored = []
+    
+    for job in jobs:
+        score = score_candidate_for_job(job, profile)
+        if score > 50:
+            scored.append((job, round(score)))
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:limit]
+
+
 
 

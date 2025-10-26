@@ -1,4 +1,3 @@
-import requests
 from django.conf import settings
 
 def geocode_address(address):
@@ -10,6 +9,7 @@ def geocode_address(address):
     params = {"address": address, "key": api_key}
 
     try:
+        import requests
         response = requests.get(url, params=params).json()
         if response.get("results"):
             location = response["results"][0]["geometry"]["location"]

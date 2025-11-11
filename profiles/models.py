@@ -23,6 +23,7 @@ class JobSeekerProfile(models.Model):
     education = models.TextField()
     work_experience = models.TextField()
     links = models.TextField(blank=True)
+    email = models.EmailField(blank=True, null=True, help_text="Contact email for recruiters")
     is_public = models.BooleanField(default=True)  # privacy
     
     address = models.CharField(max_length=255, blank=True)

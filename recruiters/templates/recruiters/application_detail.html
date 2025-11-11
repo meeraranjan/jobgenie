@@ -5,7 +5,7 @@
 
   <div class="card p-4 shadow-sm">
     <h3 class="fw-bold">{{ application.job.title }}</h3>
-    <p class="text-muted mb-4">Applicant: <strong>{{ application.candidate.username }}</strong></p>
+    <p class="text-muted mb-4">Applicant: <strong>{{ display_name_with_username }}</strong></p>
 
     <hr>
 
@@ -15,6 +15,16 @@
     {% else %}
       <p class="text-muted">No message was submitted with this application.</p>
     {% endif %}
+
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-secondary me-2" disabled>Message (coming soon)</button>
+
+    <a href="{% url 'recruiters:send_candidate_email' application.id %}" 
+      class="btn btn-success"
+      style="background-color: #28a745; border-color: #28a745;">
+      Email Candidate
+    </a>
+    </div>
 
     <h5 class="fw-semibold">Profile</h5>
     {% if profile %}

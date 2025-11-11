@@ -68,6 +68,12 @@
                 {{ form.country }}
             </div>
 
+            <div class="form-group mb-3">
+                <label for="email">Contact Email</label>
+                <input type="email" id="email" name="email" class="form-control"
+                        value="{{ form.email.value|default_if_none:'' }}">
+            </div>
+
             <button type="submit" class="btn btn-success mt-3">Save Changes</button>
             <a href="{% url 'profiles:view_profile' %}" class="btn btn-secondary mt-3 ms-2">Cancel</a>
         </form>

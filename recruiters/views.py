@@ -1,4 +1,5 @@
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.views.generic import CreateView, TemplateView, DetailView, ListView
@@ -15,6 +16,8 @@ from .models import Recruiter
 from .forms import RecruiterForm, CandidateSearchForm
 from jobs.models import Job, Application
 from profiles.models import JobSeekerProfile
+from django.contrib import messages
+from django.core.mail import send_mail
 try:
     from profiles.models import Project
 except Exception:
@@ -108,6 +111,20 @@ class RecruiterApplicationDetailView(LoginRequiredMixin, DetailView):
         candidate = application.candidate
 
         profile = JobSeekerProfile.objects.filter(user=candidate).first()
+
+        if profile and (profile.first_name or profile.last_name):
+            name = f"{profile.first_name or ''} {profile.last_name or ''}".strip()
+        elif candidate.get_full_name():
+            name = candidate.get_full_name()
+        else:
+            name = candidate.username
+
+        if name != candidate.username:
+            display_name_with_username = f"{name} ({candidate.username})"
+        else:
+            display_name_with_username = candidate.username
+
+        context["display_name_with_username"] = display_name_with_username
 
         if profile and profile.is_public:
             context["profile"] = {
@@ -218,4 +235,55 @@ class CandidateSearchView(ListView):
         ctx = super().get_context_data(**kwargs)
         ctx["form"] = CandidateSearchForm(self.request.GET or None)
         return ctx
-    
+
+def send_candidate_email(request, application_id):
+    application = get_object_or_404(Application, id=application_id)
+    candidate = application.candidate
+    profile = JobSeekerProfile.objects.filter(user=candidate).first()
+
+    # --- Display name for EMAIL PAGE ONLY ---
+    if profile and (profile.first_name or profile.last_name):
+        display_name_clean = f"{profile.first_name or ''} {profile.last_name or ''}".strip()
+    elif candidate.get_full_name():
+        display_name_clean = candidate.get_full_name()
+    else:
+        display_name_clean = candidate.username
+
+    # --- Email selection logic ---
+    recipient_email = None
+    if profile and profile.email:
+        recipient_email = profile.email.strip()
+    elif candidate.email:
+        recipient_email = candidate.email.strip()
+
+    # --- Handle missing email ---
+    if not recipient_email:
+        messages.error(
+            request,
+            f"{display_name_clean} has not provided an email address. "
+            "Try sending a message through the platform instead."
+        )
+        return redirect('recruiters:application_detail', pk=application.id)
+
+    # --- Send email on POST ---
+    if request.method == 'POST':
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [recipient_email],
+            fail_silently=False,
+        )
+
+        messages.success(request, f"Email sent to {display_name_clean} successfully!")
+        return redirect('recruiters:application_detail', pk=application.id)
+
+    # --- Render email form ---
+    return render(request, 'recruiters/send_email.html', {
+        'candidate': candidate,
+        'application': application,
+        'display_name_clean': display_name_clean,  # ✅ name only
+    })

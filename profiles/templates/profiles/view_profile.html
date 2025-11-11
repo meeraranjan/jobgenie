@@ -24,6 +24,7 @@
                 {{ profile.state }},
                 {{ profile.postal_code }},
                 {{ profile.country }}
+            <p><strong>Email:</strong> {{ profile.email|linebreaksbr }}</p>
             </p>
 
             <a href="{% url 'profiles:edit_profile' %}" class="btn btn-primary mt-3">Edit Profile</a>

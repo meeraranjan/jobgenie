@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <a href="{% url 'messaging:messaging_home' %}" class="btn btn-sm btn-link">&larr; Back</a>
+            <strong>
+                {% if other %}
+                {{ other.username }}
+                {% else %}
+                Conversation
+                {% endif %}
+            </strong>
+        </div>
+        <div class="card-body" id="messages-container" style="height:60vh; overflow:auto;"></div>
+        <div class="card-footer">
+            <form method="post" id="message-form">
+                {% csrf_token %}
+                {{ form.body }}
+                <div class="mt-2 text-end">
+                    <button type="button" class="btn btn-primary" id="send-btn">Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const conversationId = {{ conversation.pk }};
+    const messagesContainer = document.getElementById('messages-container');
+    const currentUsername = '{{ user.username }}';
+
+    function renderMessages(messagesData) {
+        messagesData.forEach(msg => {
+            const isCurrentUser = msg.sender === currentUsername;
+            const alignment = isCurrentUser ? 'justify-content-end' : 'justify-content-start';
+            const bgColor = isCurrentUser ? '#0d6efd' : '#f1f1f1';
+            const textColor = isCurrentUser ? 'color:white;' : '';
+
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `mb-3 d-flex ${alignment}`;
+            msgDiv.innerHTML = `
+                <div class="p-2 rounded" style="max-width:70%; background-color:${bgColor}; ${textColor}">
+                    <div class="small fw-bold">${msg.sender}</div>
+                    <div>${msg.body.replace(/\n/g, '<br>')}</div>
+                    <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString()}</div>
+                </div>
+            `;
+            messagesContainer.appendChild(msgDiv);
+        });
+    }
+
+    // ld msgs
+    window.addEventListener('load', function () {
+        fetch(`{% url 'messaging:conversation_detail' conversation.pk %}?format=json`)
+            .then(response => response.json())
+            .then(data => {
+                renderMessages(data.messages);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+    });
+
+    // 5 sec polling. change time at bottom of of this its in ms.
+    setInterval(function () {
+        fetch(`{% url 'messaging:conversation_detail' conversation.pk %}?format=json`)
+            .then(response => response.json())
+            .then(data => {
+                const currentMessageCount = document.querySelectorAll('.mb-3.d-flex').length;
+                if (data.messages.length > currentMessageCount) {
+                    const newMessages = data.messages.slice(currentMessageCount);
+                    renderMessages(newMessages);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            })
+            .catch(error => console.log('Auto-refresh check failed:', error));
+    }, 5000); // rEFRECSH INETERVAL SET HERE
+
+    document.getElementById('send-btn').addEventListener('click', function (e) {
+        e.preventDefault();
+        const form = document.getElementById('message-form');
+        const formData = new FormData(form);
+
+        fetch(form.action || window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    document.querySelector('textarea').value = '';
+                    fetch(`{% url 'messaging:conversation_detail' conversation.pk %}?format=json`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const currentMessageCount = document.querySelectorAll('.mb-3.d-flex').length;
+                            const newMessages = data.messages.slice(currentMessageCount);
+                            renderMessages(newMessages);
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        });
+                }
+            })
+            .catch(error => console.log('Send failed:', error));
+    });
+</script>
+{% endblock content %}

@@ -24,5 +24,6 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('jobs/', include('jobs.urls')),
     path('recruiters/', include(('recruiters.urls', 'recruiters'), namespace='recruiters')),
+    path('messaging/', include('messaging.urls')),
 ]
 handler403 = "django.views.defaults.permission_denied"

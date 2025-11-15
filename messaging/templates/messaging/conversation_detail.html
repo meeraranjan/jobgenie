@@ -60,7 +60,7 @@
             });
     });
 
-    // 5 sec polling. change time at bottom of of this its in ms.
+    // 3 sec polling. change time at bottom of of this its in ms.
     setInterval(function () {
         fetch(`{% url 'messaging:conversation_detail' conversation.pk %}?format=json`)
             .then(response => response.json())
@@ -73,7 +73,7 @@
                 }
             })
             .catch(error => console.log('Auto-refresh check failed:', error));
-    }, 5000); // rEFRECSH INETERVAL SET HERE
+    }, 3000); // rEFRECSH INETERVAL SET HERE
 
     document.getElementById('send-btn').addEventListener('click', function (e) {
         e.preventDefault();

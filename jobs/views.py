@@ -139,21 +139,21 @@ class JobListView(ListView):
             except ValueError:
                 drive_km = None
 
-            if drive_km is not None:
-                approx_drive = qs.exclude(lat__isnull=True).exclude(lng__isnull=True)
-                dests = [(j.id, j.lat, j.lng) for j in approx_drive.only("id", "lat", "lng")]
+        if drive_km is not None:
+            approx_drive = qs.exclude(lat__isnull=True).exclude(lng__isnull=True)
+            dests = [(j.id, j.lat, j.lng) for j in approx_drive.only("id", "lat", "lng")]
 
-                distances = distance_matrix_km((origin_lat, origin_lng), dests)
+            distances = distance_matrix_km((origin_lat, origin_lng), dests)
 
-                if distances is None:
-                    self.request._distance_matrix_failed = True
-                elif distances:
-                    drive_keep_ids = [
-                        job_id
-                        for job_id, d_km in distances.items()
-                        if d_km is not None and d_km <= drive_km
-                    ]
-                    qs = qs.filter(id__in=drive_keep_ids)
+            if distances:
+                drive_keep_ids = [
+                    job_id
+                    for job_id, d_km in distances.items()
+                    if d_km is not None and d_km <= drive_km
+                ]
+                qs = qs.filter(id__in=drive_keep_ids)
+            else:
+                self.request._distance_matrix_failed = True
         if user.is_authenticated:
             userprofile = getattr(user, "userprofile", None)
             if userprofile and getattr(userprofile, "role", None) == "JOB_SEEKER":

@@ -21,46 +21,66 @@ def geocode_address(address):
     return None, None
 
 def distance_matrix_km(origin, destinations):
+    """
+    origin: (lat, lng)
+    destinations: list of (job_id, lat, lng)
+    returns dict: { job_id: distance_km }  -- only for jobs with a valid distance
+    """
     if not origin or not destinations:
+        print("DM: missing origin or destinations", origin, destinations)
         return {}
 
     api_key = settings.GOOGLE_MAPS_API_KEY
-    base_url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+    url = "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix"
 
-    origin_str = f"{origin[0]},{origin[1]}"
-    dest_str = "|".join(f"{lat},{lng}" for _, lat, lng in destinations)
+    origin_lat, origin_lng = origin
 
-    params = {
-        "origins": origin_str,
-        "destinations": dest_str,
-        "key": api_key,
-        "mode": "driving",
-        "units": "metric",
+    body = {
+        "origins": [
+            {"location": {"latLng": {"latitude": origin_lat, "longitude": origin_lng}}}
+        ],
+        "destinations": [
+            {"location": {"latLng": {"latitude": lat, "longitude": lng}}}
+            for _, lat, lng in destinations
+        ],
+        "travelMode": "DRIVE",
+        "units": "METRIC",
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": api_key,
+        "X-Goog-FieldMask": "originIndex,destinationIndex,distanceMeters,status",
     }
 
     try:
-        resp = requests.get(base_url, params=params, timeout=5)
+        resp = requests.post(url, json=body, headers=headers, timeout=8)
+        resp.raise_for_status()
         data = resp.json()
     except Exception as e:
-        print("Distance Matrix request error:", e)
-        return None
-
-    print("DM status:", data.get("status"))
-    if data.get("status") != "OK":
-        print("DM error_message:", data.get("error_message"))
-        return None
-
-    rows = data.get("rows", [])
-    if not rows:
+        print("Routes API HTTP error:", e)
+        try:
+            print("Response text:", resp.text[:500])
+        except Exception:
+            pass
         return {}
 
-    elements = rows[0].get("elements", [])
-    results = {}
-    for (job_id, _, _), el in zip(destinations, elements):
-        if el.get("status") == "OK":
-            meters = el["distance"]["value"]
+    if isinstance(data, dict) and "error" in data:
+        print("Routes API logical error:", data["error"])
+        return {}
+
+    if not isinstance(data, list):
+        print("Routes API unexpected payload:", data)
+        return {}
+
+    results: Dict[int, float] = {}
+    for (job_id, _, _), element in zip(destinations, data):
+        status = element.get("status")
+        if status == "OK" and "distanceMeters" in element:
+            meters = element["distanceMeters"]
             results[job_id] = meters / 1000.0
         else:
-            results[job_id] = None
+            print("DM element not OK:", status, element)
 
+    print("DM results (km):", results)
     return results

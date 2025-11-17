@@ -60,7 +60,7 @@
                       <div class="text-muted small">{{ profile.headline }}</div>
                       <div class="text-muted small">{{ profile.skills|truncatechars:120 }}</div>
                     </div>
-                    <span class="badge bg-primary rounded-pill">{{ score|floatformat:2 }}</span>
+                    <span class="badge bg-primary rounded-pill">{{ score|floatformat:0 }}% match</span>
                   </li>
                 {% endfor %}
               </ul>

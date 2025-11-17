@@ -139,6 +139,17 @@ class JobListView(ListView):
         ctx['selected_remote_types'] = g.getlist('remote_type')
         ctx['selected_visa'] = g.get('visa', '')
         ctx['GOOGLE_MAPS_API_KEY'] = settings.GOOGLE_MAPS_API_KEY
+        
+        # Add job recommendations for job seekers
+        if self.request.user.is_authenticated:
+            try:
+                profile = self.request.user.jobseekerprofile
+                from recruiters.recommendations import recommend_jobs_for_candidate
+                recommended_jobs = recommend_jobs_for_candidate(profile, limit=5)
+                ctx['recommended_jobs'] = recommended_jobs
+            except:
+                ctx['recommended_jobs'] = []
+        
         return ctx
 
 

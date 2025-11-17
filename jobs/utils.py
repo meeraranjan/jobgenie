@@ -20,12 +20,8 @@ def geocode_address(address):
 
     return None, None
 
-def distance_matrix_km(origin, destinations):
-    """
-    origin: (lat, lng)
-    destinations: list of (job_id, lat, lng)
-    returns dict: { job_id: distance_km }  -- only for jobs with a valid distance
-    """
+def distance_matrix_km(origin: Tuple[float, float],
+                       destinations: List[Tuple[int, float, float]]) -> Dict[int, float]:
     if not origin or not destinations:
         print("DM: missing origin or destinations", origin, destinations)
         return {}
@@ -37,10 +33,28 @@ def distance_matrix_km(origin, destinations):
 
     body = {
         "origins": [
-            {"location": {"latLng": {"latitude": origin_lat, "longitude": origin_lng}}}
+            {
+                "waypoint": {
+                    "location": {
+                        "latLng": {
+                            "latitude": origin_lat,
+                            "longitude": origin_lng,
+                        }
+                    }
+                }
+            }
         ],
         "destinations": [
-            {"location": {"latLng": {"latitude": lat, "longitude": lng}}}
+            {
+                "waypoint": {
+                    "location": {
+                        "latLng": {
+                            "latitude": lat,
+                            "longitude": lng,
+                        }
+                    }
+                }
+            }
             for _, lat, lng in destinations
         ],
         "travelMode": "DRIVE",
@@ -74,13 +88,17 @@ def distance_matrix_km(origin, destinations):
         return {}
 
     results: Dict[int, float] = {}
-    for (job_id, _, _), element in zip(destinations, data):
-        status = element.get("status")
-        if status == "OK" and "distanceMeters" in element:
+    for element in data:
+        status_obj = element.get("status") or {}
+        code = status_obj.get("code", 0) 
+
+        if code == 0 and "distanceMeters" in element:
+            dest_idx = element["destinationIndex"]
+            job_id = destinations[dest_idx][0]
             meters = element["distanceMeters"]
             results[job_id] = meters / 1000.0
         else:
-            print("DM element not OK:", status, element)
+            print("DM element not OK:", element)
 
     print("DM results (km):", results)
     return results

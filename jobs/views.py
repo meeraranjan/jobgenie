@@ -59,7 +59,6 @@ class JobListView(ListView):
     def get_queryset(self):
         qs = Job.objects.all().order_by('-created_at')
         g = self.request.GET
-
         user = self.request.user
 
         if g.get('title'):
@@ -96,7 +95,7 @@ class JobListView(ListView):
             qs = qs.filter(Q(salary_min__isnull=True) | Q(salary_min__lte=max_salary))
 
         radius = (g.get('radius_km') or '').strip()
-        drive  = (g.get('drive_km') or '').strip() 
+        drive  = (g.get('drive_km') or '').strip()
 
         center = None
         if radius or drive:
@@ -106,7 +105,6 @@ class JobListView(ListView):
             try:
                 user_lat, user_lng = center
                 radius_km = float(radius)
-
                 delta_lat = radius_km / 111.0
                 cos_lat = max(0.1, cos(radians(user_lat)))
                 delta_lng = radius_km / (111.0 * cos_lat)
@@ -131,29 +129,33 @@ class JobListView(ListView):
                 qs = qs.filter(id__in=keep_ids)
             except ValueError:
                 pass
-
-        if center and drive:
-            try:
-                origin_lat, origin_lng = center
-                drive_km = float(drive)
-            except ValueError:
-                drive_km = None
-
-        if drive_km is not None:
-            approx_drive = qs.exclude(lat__isnull=True).exclude(lng__isnull=True)
-            dests = [(j.id, j.lat, j.lng) for j in approx_drive.only("id", "lat", "lng")]
-
-            distances = distance_matrix_km((origin_lat, origin_lng), dests)
-
-            if distances:
-                drive_keep_ids = [
-                    job_id
-                    for job_id, d_km in distances.items()
-                    if d_km is not None and d_km <= drive_km
-                ]
-                qs = qs.filter(id__in=drive_keep_ids)
-            else:
+        if drive:
+            if center is None:
                 self.request._distance_matrix_failed = True
+            else:
+                try:
+                    origin_lat, origin_lng = center
+                    drive_km = float(drive)
+                except ValueError:
+                    drive_km = None
+
+                if drive_km is not None:
+                    approx_drive = qs.exclude(lat__isnull=True).exclude(lng__isnull=True)
+                    dests = [(j.id, j.lat, j.lng) for j in approx_drive.only("id", "lat", "lng")]
+
+                    distances = distance_matrix_km((origin_lat, origin_lng), dests)
+                    print("Drive distances:", distances)
+
+                    if distances:
+                        keep_ids = [
+                            job_id
+                            for job_id, d_km in distances.items()
+                            if d_km is not None and d_km <= drive_km
+                        ]
+                        qs = qs.filter(id__in=keep_ids)
+                    else:
+                        self.request._distance_matrix_failed = True
+
         if user.is_authenticated:
             userprofile = getattr(user, "userprofile", None)
             if userprofile and getattr(userprofile, "role", None) == "JOB_SEEKER":

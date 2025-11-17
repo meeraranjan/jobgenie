@@ -39,6 +39,7 @@
            value="{{ request.GET.max_salary }}" placeholder="Max $">
   </div>
 
+
   <div class="col-12 col-md-4">
     <div class="input-group">
       <input type="number" min="1" step="1" class="form-control"
@@ -54,21 +55,21 @@
   </div>
 
   <div class="col-12 col-md-4">
-    <div class="d-flex flex-column">
-      <input type="number" min="1" step="1" class="form-control"
-             name="drive_km"
-             value="{{ drive_km }}"
-             placeholder="Driving radius (km)">
-      <small class="text-muted mt-1">
-        Driving distance (Google Maps).
-        {% if drive_km_used and distance_matrix_failed %}
-          <span class="text-danger">Driving filter unavailable.</span>
-        {% endif %}
-      </small>
-    </div>
+  <div class="input-group">
+    <input type="number" min="1" step="1" class="form-control"
+           name="drive_km"
+           value="{{ drive_km }}"
+           placeholder="Driving radius (km)">
+    <button type="button" id="useMyLocationDriveBtn"
+            class="btn btn-outline-secondary"
+            style="white-space:nowrap; min-width:120px;">
+      Use my location
+    </button>
   </div>
+  <small class="form-text text-muted">
+    Driving distance (Google Maps).
+  </small>
 </div>
-
 
       <div class="row g-2 mt-2 align-items-center">
         <div class="col-12 d-flex flex-wrap align-items-center gap-3">
@@ -285,22 +286,45 @@
 </script>
 
 <script>
-document.getElementById('useMyLocationBtn')?.addEventListener('click', function () {
-  if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser.');
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(
-    function (pos) {
-      document.getElementById('user_lat').value = pos.coords.latitude;
-      document.getElementById('user_lng').value = pos.coords.longitude;
-      alert("Location set. Click 'Search' to find nearby jobs.");
-    },
-    function (err) {
-      alert('Could not get your location: ' + err.message);
+  function setLocationAndAlert(source) {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser.');
+      return;
     }
-  );
-});
+
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        document.getElementById('user_lat').value = pos.coords.latitude;
+        document.getElementById('user_lng').value = pos.coords.longitude;
+
+        const which = (source === 'drive')
+          ? 'driving distance'
+          : 'straight-line distance';
+
+        alert(
+          "Location set for " + which +
+          ". Enter your desired radius and click 'Search'."
+        );
+      },
+      function (err) {
+        alert('Could not get your location: ' + err.message);
+      }
+    );
+  }
+
+  const straightBtn = document.getElementById('useMyLocationBtn');
+  if (straightBtn) {
+    straightBtn.addEventListener('click', function () {
+      setLocationAndAlert('straight');
+    });
+  }
+
+  const driveBtn = document.getElementById('useMyLocationDriveBtn');
+  if (driveBtn) {
+    driveBtn.addEventListener('click', function () {
+      setLocationAndAlert('drive');
+    });
+  }
 </script>
 {% endblock content %}
 

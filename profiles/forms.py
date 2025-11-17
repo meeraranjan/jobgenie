@@ -5,7 +5,7 @@ class JobSeekerProfileForm(forms.ModelForm):
     class Meta:
         model = JobSeekerProfile
         fields = ['first_name', 'last_name','headline', 'skills', 'education', 'work_experience', 'links', 'is_public',
-                   "address", "city", "state", "postal_code", "country",]
+                   "address", "city", "state", "postal_code", "country", 'email']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),

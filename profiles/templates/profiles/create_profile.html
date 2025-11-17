@@ -41,6 +41,14 @@
                 {{ form.links }}
             </div>
 
+            <div class="mb-3">
+            <label for="id_email">Email:</label>
+            <input type="email" name="email" id="id_email"
+                    class="form-control w-75"
+                    value="{{ form.email.value|default_if_none:'' }}"
+                    placeholder="Enter your contact email">
+            </div>
+
             <div class="form-check mb-3">
                 {{ form.is_public }}
                 {{ form.is_public.label_tag }}

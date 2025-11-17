@@ -1,4 +1,7 @@
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
+from django.conf import settings
+from django.templatetags.static import static
+from django.template.loader import render_to_string
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.views.generic import CreateView, TemplateView, DetailView, ListView
@@ -9,12 +12,16 @@ from django.http import JsonResponse
 from django.db.models import Q
 from functools import reduce
 import operator
+import os
+import base64
 import re
 from math import radians, sin, cos, asin, sqrt
 from .models import Recruiter
 from .forms import RecruiterForm, CandidateSearchForm
 from jobs.models import Job, Application
 from profiles.models import JobSeekerProfile
+from django.contrib import messages
+from django.core.mail import send_mail, EmailMultiAlternatives
 try:
     from profiles.models import Project
 except Exception:
@@ -108,6 +115,20 @@ class RecruiterApplicationDetailView(LoginRequiredMixin, DetailView):
         candidate = application.candidate
 
         profile = JobSeekerProfile.objects.filter(user=candidate).first()
+
+        if profile and (profile.first_name or profile.last_name):
+            name = f"{profile.first_name or ''} {profile.last_name or ''}".strip()
+        elif candidate.get_full_name():
+            name = candidate.get_full_name()
+        else:
+            name = candidate.username
+
+        if name != candidate.username:
+            display_name_with_username = f"{name} ({candidate.username})"
+        else:
+            display_name_with_username = candidate.username
+
+        context["display_name_with_username"] = display_name_with_username
 
         if profile and profile.is_public:
             context["profile"] = {
@@ -218,4 +239,68 @@ class CandidateSearchView(ListView):
         ctx = super().get_context_data(**kwargs)
         ctx["form"] = CandidateSearchForm(self.request.GET or None)
         return ctx
-    
+
+def send_candidate_email(request, application_id):
+    application = get_object_or_404(Application, id=application_id)
+    candidate = application.candidate
+    profile = JobSeekerProfile.objects.filter(user=candidate).first()
+
+    # --- Recipient name ---
+    if profile and (profile.first_name or profile.last_name):
+        recipient_name = f"{profile.first_name or ''} {profile.last_name or ''}".strip()
+    elif candidate.get_full_name():
+        recipient_name = candidate.get_full_name()
+    else:
+        recipient_name = candidate.username
+
+    # --- Recipient email ---
+    recipient_email = profile.email if profile and profile.email else candidate.email
+    if not recipient_email:
+        messages.error(request, f"{recipient_name} has not provided an email address. Try messaging instead.")
+        return redirect('recruiters:application_detail', pk=application.id)
+
+    # --- Read and encode logo ---
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'logo.png')
+    logo_data_uri = ""
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as img_file:
+            logo_base64 = base64.b64encode(img_file.read()).decode("utf-8")
+            logo_data_uri = f"data:image/png;base64,{logo_base64}"
+
+    if request.method == 'POST':
+        subject_input = request.POST.get('subject')
+        message_body = request.POST.get('message')
+        
+        job = application.job
+        company_name = job.company_name or "Unknown Company"
+
+        # 👇 This is the inbox subject (caption)
+        email_subject = f"JobGenie - Regarding your application for {job.title} from {company_name}"
+
+        # 👇 These go into the HTML email body
+        context = {
+            'company_name': company_name,
+            'header_title': subject_input or "Application Update",  # subheader inside email
+            'message_body': message_body,
+        }
+
+        html_message = render_to_string('recruiters/email_template.html', context)
+
+        email = EmailMultiAlternatives(
+            subject=email_subject,  # shown in inbox
+            body=message_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[recipient_email],
+        )
+        email.attach_alternative(html_message, "text/html")
+        email.send()
+
+        messages.success(request, f"Email sent to {recipient_name} successfully!")
+        return redirect('recruiters:application_detail', pk=application.id)
+
+    # GET: render email form
+    return render(request, 'recruiters/send_email.html', {
+        'candidate': candidate,
+        'application': application,
+        'display_name_clean': recipient_name,
+    })

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-5" style="max-width: 700px;">
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body p-5">
+
+      <h2 class="fw-bold mb-4 text-center">Email Candidate</h2>
+      <p class="text-muted text-center mb-4">
+        Send a personalized email directly to <strong>{{ display_name_clean }}</strong> 
+        about the <em>{{ application.job.title }}</em> position.
+      </p>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <!-- Email header (displayed inside email, not subject) -->
+        <div class="form-group mb-4">
+          <label for="subject" class="fw-semibold mb-2">
+            Email Header <small class="text-muted"></small>
+          </label>
+          <input type="text" id="subject" name="subject"
+                 class="form-control border-2 rounded-3 p-3"
+                 placeholder="e.g. Interview Invitation, Next Steps, Thank You" required>
+        </div>
+
+        <!-- Main message body -->
+        <div class="form-group mb-4">
+          <label for="message" class="fw-semibold mb-2">Message</label>
+          <textarea id="message" name="message"
+                    class="form-control border-2 rounded-3 p-3"
+                    rows="6"
+                    placeholder="Write your message to the candidate here..." required></textarea>
+          <div class="form-text text-muted mt-1">
+            This message will appear as the main email content.
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+          <button type="submit"
+                  class="btn btn-primary px-5 py-2 rounded-3"
+                  style="background-color: #28a745; border-color: #28a745;">
+            <i class="bi bi-envelope-fill me-2"></i>Send Email
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control:focus {
+    border-color: #94ec88;
+    box-shadow: 0 0 0 0.25rem rgba(85, 124, 255, 0.25);
+  }
+  .btn-primary:hover {
+    background-color: #94ec88 !important;
+  }
+</style>
+{% endblock %}

@@ -18,7 +18,6 @@ from recruiters.recommendations import recommend_candidates_for_job
 
 from math import radians, sin, cos, asin, sqrt
 from .utils import geocode_address, distance_matrix_km
-from profiles.models import JobSeekerProfile
 
 
 def haversine_km(lat1, lng1, lat2, lng2):

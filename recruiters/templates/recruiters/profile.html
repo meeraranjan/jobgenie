@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    {% if recruiter %}
+    <h1>{{ recruiter.company_name }}</h1>
+    {% if public %}
+    <p><strong>Name:</strong> {{ recruiter.first_name }} {{ recruiter.last_name }}</p>
+    <p><strong>Position:</strong> {{ recruiter.position }}</p>
+    {% if recruiter.contact_email %}
+    <p><strong>Email:</strong> <a href="mailto:{{ recruiter.contact_email }}">{{ recruiter.contact_email }}</a></p>
+    {% endif %}
+    {% else %}
+    <p>This profile is private.</p>
+    {% endif %}
+    {% else %}
+    <p>Recruiter profile not found.</p>
+    {% endif %}
+</div>
+{% endblock %}

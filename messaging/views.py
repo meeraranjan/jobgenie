@@ -77,58 +77,70 @@ def _get_existing_conversation(user1, user2):
 
 
 @login_required
+@login_required
 def select_user_to_message(request):
-	"""List all users (except current) to start a conversation with."""
-	users = User.objects.exclude(pk=request.user.pk)
-	
-	user_list = []
-	for user in users:
-		try:
-			profile = user.userprofile
-			role = profile.get_role_display()
-		except UserProfile.DoesNotExist:
-			profile = None
-			role = 'Unknown'
-		
-		# skip privates
-		try:
-			seeker_profile = user.jobseekerprofile
-			if not seeker_profile.is_public:
-				continue
-		except JobSeekerProfile.DoesNotExist:
-			pass
-		
-		# skip self
-		if user == request.user:
-			continue
-		
-		company = None
-		if profile and profile.role == 'RECRUITER':
-			try:
-				recruiter = user.recruiter_profile
-				company = recruiter.company_name
-			except Recruiter.DoesNotExist:
-				company = None
-		
-		display_name = _get_display_name(user, request.user)
-		is_public = True
-		# determine public status: if jobseeker and not public, already skipped; for recruiter check is_public
-		try:
-			if hasattr(user, 'recruiter_profile'):
-				is_public = user.recruiter_profile.is_public
-		except Exception:
-			pass
+    """List only PUBLIC recruiters + PUBLIC job seekers (except current user)."""
 
-		user_list.append({
-			'user': user,
-			'role': role,
-			'company': company,
-			'display_name': display_name,
-			'is_public': is_public,
-		})
-	
-	context = {'user_list': user_list}
-	return render(request, 'messaging/select_user.html', context)
+    users = User.objects.exclude(pk=request.user.pk)
+    user_list = []
+
+    for user in users:
+
+        # determine role (if exists)
+        try:
+            profile = user.userprofile
+            role = profile.get_role_display()
+        except UserProfile.DoesNotExist:
+            continue   # skip if no role profile
+
+        # ------------ FILTER PRIVACY ------------
+        # If Job Seeker → require is_public=True
+        if profile.role == "JOB_SEEKER":
+            try:
+                seeker = user.jobseekerprofile
+                if not seeker.is_public:
+                    continue  # skip private job seeker
+            except JobSeekerProfile.DoesNotExist:
+                continue
+
+        # If Recruiter → require is_public=True
+        if profile.role == "RECRUITER":
+            try:
+                recruiter = user.recruiter_profile
+                if not recruiter.is_public:
+                    continue  # skip private recruiter
+            except Recruiter.DoesNotExist:
+                continue
+        # -----------------------------------------
+
+        # ------------ DISPLAY NAME ------------
+        # Job Seeker
+        display_name = None
+        if profile.role == "JOB_SEEKER":
+            seeker = user.jobseekerprofile
+            full = f"{seeker.first_name or ''} {seeker.last_name or ''}".strip()
+            display_name = full if full else user.username
+
+        # Recruiter
+        elif profile.role == "RECRUITER":
+            recruiter = user.recruiter_profile
+            full = f"{recruiter.first_name or ''} {recruiter.last_name or ''}".strip()
+            display_name = full if full else user.username
+        # -----------------------------------------
+
+        # Company (only for recruiters)
+        company = None
+        if profile.role == "RECRUITER":
+            company = recruiter.company_name
+
+        user_list.append({
+            "user": user,
+            "role": role,
+            "company": company,
+            "display_name": display_name,
+        })
+
+    return render(request, "messaging/select_user.html", {"user_list": user_list})
 
 
 @login_required

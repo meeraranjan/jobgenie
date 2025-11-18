@@ -17,7 +17,7 @@ from django.conf import settings
 from recruiters.recommendations import recommend_candidates_for_job
 
 from math import radians, sin, cos, asin, sqrt
-from .utils import geocode_address
+from .utils import geocode_address, distance_matrix_km
 
 
 def haversine_km(lat1, lng1, lat2, lng2):
@@ -58,9 +58,8 @@ class JobListView(ListView):
     def get_queryset(self):
         qs = Job.objects.all().order_by('-created_at')
         g = self.request.GET
-
-        # Filter jobs based on user role
         user = self.request.user
+
         if g.get('title'):
             qs = qs.filter(title__icontains=g['title'])
 
@@ -71,7 +70,9 @@ class JobListView(ListView):
             raw = g['skills'].replace(',', ' ')
             tokens = [t.strip() for t in raw.split() if t.strip()]
             if tokens:
-                qs = qs.filter(reduce(operator.or_, (Q(skills__icontains=t) for t in tokens)))
+                qs = qs.filter(
+                    reduce(operator.or_, (Q(skills__icontains=t) for t in tokens))
+                )
 
         job_types = g.getlist('job_type')
         if job_types:
@@ -93,35 +94,67 @@ class JobListView(ListView):
             qs = qs.filter(Q(salary_min__isnull=True) | Q(salary_min__lte=max_salary))
 
         radius = (g.get('radius_km') or '').strip()
+        drive  = (g.get('drive_km') or '').strip()
+
         center = None
-        if radius:
+        if radius or drive:
             center = self._center_from_request(g)
 
         if center and radius:
             try:
                 user_lat, user_lng = center
                 radius_km = float(radius)
-
                 delta_lat = radius_km / 111.0
                 cos_lat = max(0.1, cos(radians(user_lat)))
                 delta_lng = radius_km / (111.0 * cos_lat)
 
-                approx = (qs.exclude(lat__isnull=True)
-                            .exclude(lng__isnull=True)
-                            .filter(lat__gte=user_lat - delta_lat,
-                                    lat__lte=user_lat + delta_lat,
-                                    lng__gte=user_lng - delta_lng,
-                                    lng__lte=user_lng + delta_lng))
+                approx = (
+                    qs.exclude(lat__isnull=True)
+                      .exclude(lng__isnull=True)
+                      .filter(
+                          lat__gte=user_lat - delta_lat,
+                          lat__lte=user_lat + delta_lat,
+                          lng__gte=user_lng - delta_lng,
+                          lng__lte=user_lng + delta_lng,
+                      )
+                )
 
                 keep_ids = []
                 for j in approx.only('id', 'lat', 'lng'):
                     d = haversine_km(user_lat, user_lng, j.lat, j.lng)
                     if d is not None and d <= radius_km:
                         keep_ids.append(j.id)
+
                 qs = qs.filter(id__in=keep_ids)
             except ValueError:
                 pass
-        
+        if drive:
+            if center is None:
+                self.request._distance_matrix_failed = True
+            else:
+                try:
+                    origin_lat, origin_lng = center
+                    drive_km = float(drive)
+                except ValueError:
+                    drive_km = None
+
+                if drive_km is not None:
+                    approx_drive = qs.exclude(lat__isnull=True).exclude(lng__isnull=True)
+                    dests = [(j.id, j.lat, j.lng) for j in approx_drive.only("id", "lat", "lng")]
+
+                    distances = distance_matrix_km((origin_lat, origin_lng), dests)
+                    print("Drive distances:", distances)
+
+                    if distances:
+                        keep_ids = [
+                            job_id
+                            for job_id, d_km in distances.items()
+                            if d_km is not None and d_km <= drive_km
+                        ]
+                        qs = qs.filter(id__in=keep_ids)
+                    else:
+                        self.request._distance_matrix_failed = True
+
         if user.is_authenticated:
             userprofile = getattr(user, "userprofile", None)
             if userprofile and getattr(userprofile, "role", None) == "JOB_SEEKER":
@@ -139,8 +172,15 @@ class JobListView(ListView):
         ctx['selected_remote_types'] = g.getlist('remote_type')
         ctx['selected_visa'] = g.get('visa', '')
         ctx['GOOGLE_MAPS_API_KEY'] = settings.GOOGLE_MAPS_API_KEY
-        
-        # Add job recommendations for job seekers
+
+        radius_raw = (g.get('radius_km') or '').strip()
+        drive_raw  = (g.get('drive_km') or '').strip()
+
+        ctx['radius_km'] = radius_raw
+        ctx['drive_km'] = drive_raw
+        ctx['drive_km_used'] = bool(drive_raw)
+        ctx['distance_matrix_failed'] = getattr(self.request, "_distance_matrix_failed", False)
+
         if self.request.user.is_authenticated:
             try:
                 profile = self.request.user.jobseekerprofile
@@ -149,7 +189,7 @@ class JobListView(ListView):
                 ctx['recommended_jobs'] = recommended_jobs
             except:
                 ctx['recommended_jobs'] = []
-        
+
         return ctx
 
 

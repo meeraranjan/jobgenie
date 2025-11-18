@@ -33,6 +33,12 @@ class JobSeekerProfile(models.Model):
     country = models.CharField(max_length=100, blank=True)
     lat = models.FloatField(null=True, blank=True)
     lng = models.FloatField(null=True, blank=True)
+
+    preferred_radius_km = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Preferred commute radius (km)"
+    )
     
     @property
     def full_address(self):

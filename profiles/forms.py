@@ -5,11 +5,12 @@ class JobSeekerProfileForm(forms.ModelForm):
     class Meta:
         model = JobSeekerProfile
         fields = ['first_name', 'last_name','headline', 'skills', 'education', 'work_experience', 'links', 'is_public',
-                   "address", "city", "state", "postal_code", "country", 'email']
+                   "address", "city", "state", "postal_code", "country", "email", 'preferred_radius_km',]
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'headline': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'example@domain.com'}),
             'skills': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'education': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'work_experience': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -20,8 +21,12 @@ class JobSeekerProfileForm(forms.ModelForm):
             'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'State'}),
             'postal_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ZIP / Postal Code'}),
             'country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Country'}),
+            'preferred_radius_km': forms.NumberInput(
+                attrs={'min': 1, 'class': 'form-control'}
+            ),
             
         }
         labels = {
             'is_public': 'Make my profile visible to others', 
+            'preferred_radius_km': 'Preferred commute radius (km)',
         }

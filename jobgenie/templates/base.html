@@ -65,6 +65,10 @@
                                 href="{% url 'recruiters:dashboard' %}">Dashboard</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'recruiters:edit_profile' %}active{% endif %}"
+                                href="{% url 'recruiters:edit_profile' %}">Edit Profile</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.path|slice:':18' == '/profiles/jobseekers/' %}active{% endif %}"
                                 href="{% url 'profiles:jobseeker_list' %}">Job Seekers</a>
                         </li>

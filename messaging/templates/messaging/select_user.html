@@ -19,7 +19,12 @@
             <tbody>
                 {% for item in user_list %}
                 <tr>
-                    <td><strong>{{ item.user.username }}</strong></td>
+                    <td>
+                        <strong>{{ item.display_name }}</strong>
+                        {% if item.display_name != item.user.username %}
+                        <div class="text-muted small">@{{ item.user.username }}</div>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if item.role == 'Recruiter' %}
                         <span class="badge bg-info">{{ item.role }}</span>

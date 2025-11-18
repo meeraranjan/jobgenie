@@ -12,6 +12,30 @@ from .forms import MessageForm
 User = get_user_model()
 
 
+def _get_display_name(user, viewer=None):
+	try:
+		seeker = user.jobseekerprofile
+		if seeker and seeker.is_public:
+			if seeker.first_name or seeker.last_name:
+				return f"{(seeker.first_name or '').strip()} {(seeker.last_name or '').strip()}".strip()
+	except Exception:
+		pass
+
+	try:
+		recruiter = user.recruiter_profile
+		if recruiter and recruiter.is_public:
+			name = "".join([recruiter.first_name or "", " ", recruiter.last_name or ""]).strip()
+			if name:
+				return name
+			if recruiter.company_name:
+				return recruiter.company_name
+	except Exception:
+		pass
+
+	#fallback to username
+	return user.username
+
+
 @login_required
 def messaging_home(request):
 	"""Messaging tab: list of conversations for the logged-in user."""
@@ -24,11 +48,14 @@ def messaging_home(request):
 	items = []
 	for conv in conversations:
 		other = conv.participants.exclude(pk=request.user.pk).first()
+		other_display = _get_display_name(other, request.user) if other else ''
 		last = conv.messages.order_by('created_at').last()
 		unread = conv.messages.filter(is_read=False).exclude(sender=request.user).count()
 		items.append({
 			'conversation': conv,
 			'other': other,
+			'other_display': other_display,
+			'show_username': bool(other and other_display and other.username and other_display != other.username),
 			'last': last,
 			'unread': unread,
 		})
@@ -51,46 +78,57 @@ def _get_existing_conversation(user1, user2):
 
 @login_required
 def select_user_to_message(request):
-    """List all users (except current) to start a conversation with."""
-    users = User.objects.exclude(pk=request.user.pk)
-    
-    user_list = []
-    for user in users:
-        try:
-            profile = user.userprofile
-            role = profile.get_role_display()
-        except UserProfile.DoesNotExist:
-            profile = None
-            role = 'Unknown'
-        
+	"""List all users (except current) to start a conversation with."""
+	users = User.objects.exclude(pk=request.user.pk)
+	
+	user_list = []
+	for user in users:
+		try:
+			profile = user.userprofile
+			role = profile.get_role_display()
+		except UserProfile.DoesNotExist:
+			profile = None
+			role = 'Unknown'
+		
 		# skip privates
-        try:
-            seeker_profile = user.jobseekerprofile
-            if not seeker_profile.is_public:
-                continue
-        except JobSeekerProfile.DoesNotExist:
-            pass
-        
-        # skip self
-        if user == request.user:
-            continue
-        
-        company = None
-        if profile and profile.role == 'RECRUITER':
-            try:
-                recruiter = user.recruiter_profile
-                company = recruiter.company_name
-            except Recruiter.DoesNotExist:
-                company = None
-        
-        user_list.append({
-            'user': user,
-            'role': role,
-            'company': company,
-        })
-    
-    context = {'user_list': user_list}
-    return render(request, 'messaging/select_user.html', context)
+		try:
+			seeker_profile = user.jobseekerprofile
+			if not seeker_profile.is_public:
+				continue
+		except JobSeekerProfile.DoesNotExist:
+			pass
+		
+		# skip self
+		if user == request.user:
+			continue
+		
+		company = None
+		if profile and profile.role == 'RECRUITER':
+			try:
+				recruiter = user.recruiter_profile
+				company = recruiter.company_name
+			except Recruiter.DoesNotExist:
+				company = None
+		
+		display_name = _get_display_name(user, request.user)
+		is_public = True
+		# determine public status: if jobseeker and not public, already skipped; for recruiter check is_public
+		try:
+			if hasattr(user, 'recruiter_profile'):
+				is_public = user.recruiter_profile.is_public
+		except Exception:
+			pass
+
+		user_list.append({
+			'user': user,
+			'role': role,
+			'company': company,
+			'display_name': display_name,
+			'is_public': is_public,
+		})
+	
+	context = {'user_list': user_list}
+	return render(request, 'messaging/select_user.html', context)
 
 
 @login_required
@@ -129,22 +167,24 @@ def conversation_detail(request, pk):
 			return redirect('messaging:conversation_detail', pk=conversation.pk)
 	else:
 		form = MessageForm()
-
-	raw_messages = conversation.messages.select_related('sender').values(
-		'id', 'body', 'created_at', 'is_read', 'sender__username'
-	).order_by('created_at')
-	
+	raw_messages = conversation.messages.select_related('sender').order_by('created_at')
+    
 	messages_data = []
 	for msg in raw_messages:
+		sender_user = msg.sender
+		sender_display = _get_display_name(sender_user, request.user)
 		messages_data.append({
-			'id': msg['id'],
-			'sender': msg['sender__username'],
-			'body': msg['body'],
-			'created_at': msg['created_at'],
-			'is_read': msg['is_read'],
+			'id': msg.id,
+			'sender': sender_user.username,
+			'sender_display': sender_display,
+			'body': msg.body,
+			'created_at': msg.created_at,
+			'is_read': msg.is_read,
 		})
 	
 	other = conversation.participants.exclude(pk=request.user.pk).first()
+
+	other_display = _get_display_name(other, request.user) if other else ''
 
 	if request.GET.get('format') == 'json':
 		return JsonResponse({
@@ -152,6 +192,7 @@ def conversation_detail(request, pk):
 				{
 					'id': msg['id'],
 					'sender': msg['sender'],
+					'sender_display': msg.get('sender_display') or msg['sender'],
 					'body': msg['body'],
 					'created_at': msg['created_at'].isoformat(),
 					'is_read': msg['is_read'],
@@ -164,5 +205,6 @@ def conversation_detail(request, pk):
 		'conversation': conversation,
 		'form': form,
 		'other': other,
+		'other_display': other_display,
 	}
 	return render(request, 'messaging/conversation_detail.html', context)

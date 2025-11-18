@@ -4,7 +4,7 @@ from .models import Recruiter
 class RecruiterForm(forms.ModelForm):
     class Meta:
         model = Recruiter
-        fields = ['company_name', 'position']  # adjust fields as needed
+        fields = ['company_name', 'position', 'first_name', 'last_name', 'contact_email', 'is_public']
         widgets = {
             'company_name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -13,6 +13,18 @@ class RecruiterForm(forms.ModelForm):
             'position': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter your position'
+            }),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'First name (optional)'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Last name (optional)'
+            }),
+            'contact_email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Contact email (optional)'
             }),
         }
 

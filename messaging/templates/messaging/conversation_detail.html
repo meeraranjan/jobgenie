@@ -6,7 +6,7 @@
             <a href="{% url 'messaging:messaging_home' %}" class="btn btn-sm btn-link">&larr; Back</a>
             <strong>
                 {% if other %}
-                {{ other.username }}
+                {{ other_display }}
                 {% else %}
                 Conversation
                 {% endif %}
@@ -41,7 +41,7 @@
             msgDiv.className = `mb-3 d-flex ${alignment}`;
             msgDiv.innerHTML = `
                 <div class="p-2 rounded" style="max-width:70%; background-color:${bgColor}; ${textColor}">
-                    <div class="small fw-bold">${msg.sender}</div>
+                    <div class="small fw-bold">${msg.sender_display || msg.sender}</div>
                     <div>${msg.body.replace(/\n/g, '<br>')}</div>
                     <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString()}</div>
                 </div>

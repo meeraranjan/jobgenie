@@ -5,6 +5,7 @@ from django.template.loader import render_to_string
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.views.generic import CreateView, TemplateView, DetailView, ListView
+from django.views.generic.edit import UpdateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -304,3 +305,42 @@ def send_candidate_email(request, application_id):
         'application': application,
         'display_name_clean': recipient_name,
     })
+
+
+class RecruiterProfileView(DetailView):
+    model = Recruiter
+    template_name = "recruiters/profile.html"
+    context_object_name = "recruiter"
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username')
+        user = get_object_or_404(self.request.user.__class__, username=username)
+        recruiter = getattr(user, 'recruiter_profile', None)
+        if not recruiter:
+            from django.http import Http404
+            raise Http404("Recruiter profile not found")
+        return recruiter
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        recruiter = ctx.get('recruiter')
+        if recruiter is None:
+            ctx['public'] = False
+            return ctx
+
+        if not recruiter.is_public and self.request.user != recruiter.user:
+            ctx['public'] = False
+        else:
+            ctx['public'] = True
+        return ctx
+
+
+class RecruiterEditView(LoginRequiredMixin, UpdateView):
+    model = Recruiter
+    form_class = RecruiterForm
+    template_name = "recruiters/edit_profile.html"
+    success_url = "/recruiters/dashboard/"
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Recruiter, user=self.request.user)
+    

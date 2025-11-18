@@ -11,7 +11,10 @@
         <a href="{% url 'messaging:conversation_detail' pk=item.conversation.pk %}"
             class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
             <div>
-                <strong>{{ item.other.username|default:'Unknown' }}</strong>
+                <strong>{{ item.other_display|default:item.other.username|default:'Unknown' }}</strong>
+                {% if item.show_username %}
+                <div class="text-muted small">@{{ item.other.username }}</div>
+                {% endif %}
                 {% if item.last %}
                 <div class="small text-muted">{{ item.last.created_at|date:'M d, Y H:i' }}</div>
                 {% endif %}

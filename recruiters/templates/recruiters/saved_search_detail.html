@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+
+  <a href="{% url 'recruiters:saved_search_list' %}" class="btn btn-link ps-0 mb-3">
+    ← Back to Saved Searches
+  </a>
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="mb-0">{{ saved_search.name }}</h2>
+    <a href="{% url 'recruiters:saved_search_email' saved_search.pk %}"
+       class="btn btn-sm btn-outline-primary">
+      Email me new matches
+    </a>
+  </div>
+
+  <p class="text-muted">
+    Matches for your saved filters.
+    <a href="{% url 'recruiters:candidate_search' %}?{{ saved_search.query_string }}">
+      Open this search in the filter form
+    </a>
+  </p>
+
+  {% if new_since %}
+    <div class="alert alert-info">
+      Candidates created since your last visit are highlighted.
+    </div>
+  {% endif %}
+
+  {% if candidates %}
+    <ul class="list-group">
+      {% for c in candidates %}
+        <li class="list-group-item d-flex justify-content-between align-items-center
+            {% if new_since and c.created_at > new_since %} list-group-item-success{% endif %}">
+          <div>
+            <strong>{{ c.user.get_full_name|default:c.user.username }}</strong><br>
+            <span class="small text-muted">
+              {{ c.city }}{% if c.state %}, {{ c.state }}{% endif %}
+              {% if c.country %}, {{ c.country }}{% endif %}
+            </span>
+            {% if c.skills %}
+              <div class="small mt-1"><strong>Skills:</strong> {{ c.skills }}</div>
+            {% endif %}
+          </div>
+          {% if c.created_at %}
+            <span class="badge bg-secondary">
+              Joined {{ c.created_at|date:"M j, Y" }}
+            </span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-light border">
+      No candidates match this saved search yet.
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

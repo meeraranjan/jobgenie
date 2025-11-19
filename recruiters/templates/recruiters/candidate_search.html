@@ -58,6 +58,27 @@
     </div>
     </form>
 
+        <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">Candidate Results</h4>
+
+      <form method="post" action="{% url 'recruiters:save_candidate_search' %}" class="d-flex align-items-center gap-2">
+        {% csrf_token %}
+        <input type="hidden" name="query_string" value="{{ request.GET.urlencode }}">
+        <input type="text"
+               name="name"
+               class="form-control form-control-sm"
+               style="max-width: 220px;"
+               placeholder="Name this search (optional)">
+        <button type="submit" class="btn btn-sm btn-outline-primary">
+          Save this search
+        </button>
+      </form>
+    </div>
+
+    <p class="mb-3">
+      <a href="{% url 'recruiters:saved_search_list' %}">View saved searches</a>
+    </p>
+
   {% if candidates %}
     <div class="row row-cols-1 row-cols-md-2 g-3">
       {% for c in candidates %}

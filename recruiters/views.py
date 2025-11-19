@@ -17,12 +17,17 @@ import os
 import base64
 import re
 from math import radians, sin, cos, asin, sqrt
-from .models import Recruiter
 from .forms import RecruiterForm, CandidateSearchForm
 from jobs.models import Job, Application
 from profiles.models import JobSeekerProfile
 from django.contrib import messages
 from django.core.mail import send_mail, EmailMultiAlternatives
+from urllib.parse import parse_qs
+from django.utils import timezone
+from django.views.generic import DeleteView
+from django.urls import reverse
+
+from .models import Recruiter, SavedCandidateSearch
 try:
     from profiles.models import Project
 except Exception:
@@ -160,6 +165,70 @@ def haversine_km(lat1, lng1, lat2, lng2):
     a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)**2
     c = 2 * asin(sqrt(a))
     return R * c
+
+def apply_candidate_filters(base_qs, params):
+    raw_skills = params.get("skills", "")
+    skill_tokens = _tokens(raw_skills)
+    if skill_tokens:
+        and_clauses = []
+        for t in skill_tokens:
+            and_clauses.append(
+                Q(skills__icontains=t) |
+                Q(headline__icontains=t) |
+                Q(work_experience__icontains=t)
+            )
+        base_qs = base_qs.filter(reduce(operator.and_, and_clauses))
+
+    loc = params.get("city", "")
+    if loc:
+        base_qs = base_qs.filter(
+            Q(city__icontains=loc) |
+            Q(state__icontains=loc) |
+            Q(country__icontains=loc)
+        )
+
+    proj = params.get("project", "")
+    if proj:
+        base_qs = base_qs.filter(
+            Q(work_experience__icontains=proj) |
+            Q(headline__icontains=proj) |
+            Q(education__icontains=proj)
+        )
+
+    radius = (params.get("radius_km", "") or "").strip()
+    user_lat = params.get("user_lat")
+    user_lng = params.get("user_lng")
+
+    if radius and user_lat and user_lng:
+        try:
+            radius_km = float(radius)
+            user_lat = float(user_lat)
+            user_lng = float(user_lng)
+
+            delta_lat = radius_km / 111.0
+            cos_lat = max(0.1, cos(radians(user_lat)))
+            delta_lng = radius_km / (111.0 * cos_lat)
+
+            qs = base_qs.exclude(lat__isnull=True).exclude(lng__isnull=True)
+            qs = qs.filter(
+                lat__gte=user_lat - delta_lat,
+                lat__lte=user_lat + delta_lat,
+                lng__gte=user_lng - delta_lng,
+                lng__lte=user_lng + delta_lng
+            )
+
+            keep_ids = []
+            for c in qs.only("id", "lat", "lng"):
+                d = haversine_km(user_lat, user_lng, c.lat, c.lng)
+                if d is not None and d <= radius_km:
+                    keep_ids.append(c.id)
+
+            base_qs = qs.filter(id__in=keep_ids)
+        except ValueError:
+            pass
+
+    return base_qs
+
 class CandidateSearchView(ListView):
     template_name = "recruiters/candidate_search.html"
     context_object_name = "candidates"
@@ -241,6 +310,32 @@ class CandidateSearchView(ListView):
         ctx["form"] = CandidateSearchForm(self.request.GET or None)
         return ctx
 
+@login_required
+def save_candidate_search(request):
+    recruiter = getattr(request.user, "recruiter_profile", None)
+    if recruiter is None:
+        messages.error(request, "Only recruiters can save candidate searches.")
+        return redirect("recruiters:candidate_search")
+
+    if request.method != "POST":
+        return redirect("recruiters:candidate_search")
+
+    name = (request.POST.get("name") or "").strip() or "My search"
+    query_string = (request.POST.get("query_string") or "").strip()
+
+    if not query_string:
+        messages.warning(request, "There is no active filter to save.")
+        return redirect("recruiters:candidate_search")
+
+    SavedCandidateSearch.objects.create(
+        recruiter=recruiter,
+        name=name,
+        query_string=query_string,
+    )
+
+    messages.success(request, f"Saved search '{name}'.")
+    return redirect("recruiters:saved_search_list")
+
 def send_candidate_email(request, application_id):
     application = get_object_or_404(Application, id=application_id)
     candidate = application.candidate
@@ -306,6 +401,129 @@ def send_candidate_email(request, application_id):
         'display_name_clean': recipient_name,
     })
 
+class SavedSearchListView(LoginRequiredMixin, ListView):
+    model = SavedCandidateSearch
+    template_name = "recruiters/saved_search_list.html"
+    context_object_name = "saved_searches"
+
+    def get_queryset(self):
+        recruiter = getattr(self.request.user, "recruiter_profile", None)
+        if recruiter is None:
+            return SavedCandidateSearch.objects.none()
+        return recruiter.saved_searches.order_by("-created_at")
+
+
+class SavedSearchDetailView(LoginRequiredMixin, ListView):
+    model = JobSeekerProfile
+    template_name = "recruiters/saved_search_detail.html"
+    context_object_name = "candidates"
+
+    def get_queryset(self):
+        saved = get_object_or_404(
+            SavedCandidateSearch,
+            pk=self.kwargs["pk"],
+            recruiter__user=self.request.user,
+        )
+        self.saved_search = saved
+
+        base_qs = (
+            JobSeekerProfile.objects
+            .filter(is_public=True)
+            .order_by("last_name", "first_name")
+        )
+
+        parsed = parse_qs(saved.query_string, keep_blank_values=True)
+        params = {k: (v[0] if v else "") for k, v in parsed.items()}
+
+        qs = apply_candidate_filters(base_qs, params)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        saved = self.saved_search
+
+        last_run = saved.last_run_at
+        ctx["new_since"] = last_run
+        ctx["saved_search"] = saved
+
+        saved.last_run_at = timezone.now()
+        saved.save(update_fields=["last_run_at"])
+
+        return ctx
+
+@login_required
+def email_saved_search_matches(request, pk):
+    recruiter = getattr(request.user, "recruiter_profile", None)
+    if recruiter is None:
+        messages.error(request, "Only recruiters can email saved search matches.")
+        return redirect("recruiters:saved_search_list")
+
+    saved = get_object_or_404(
+        SavedCandidateSearch,
+        pk=pk,
+        recruiter=recruiter
+    )
+
+    base_qs = (
+        JobSeekerProfile.objects
+        .filter(is_public=True)
+        .order_by("last_name", "first_name")
+    )
+    parsed = parse_qs(saved.query_string, keep_blank_values=True)
+    params = {k: (v[0] if v else "") for k, v in parsed.items()}
+    qs = apply_candidate_filters(base_qs, params)
+
+    if saved.last_run_at:
+        qs = qs.filter(user__date_joined__gt=saved.last_run_at)
+
+    candidates = list(qs)
+
+    if not candidates:
+        messages.info(request, "No new candidates since your last run for this search.")
+        return redirect("recruiters:saved_search_detail", pk=saved.pk)
+
+    subject = f"JobGenie: new candidates for '{saved.name}'"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    to_email = [request.user.email] if request.user.email else []
+
+    if not to_email:
+        messages.error(
+            request,
+            "You don't have an email address on your account. "
+            "Add one in your profile to receive notifications."
+        )
+        return redirect("recruiters:saved_search_detail", pk=saved.pk)
+
+    html_body = render_to_string(
+        "recruiters/saved_search_email.html",
+        {
+            "saved_search": saved,
+            "candidates": candidates,
+        },
+    )
+
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body="New candidates match your saved search.",
+        from_email=from_email,
+        to=to_email,
+    )
+    email.attach_alternative(html_body, "text/html")
+    email.send()
+
+    messages.success(request, "Email sent with new matching candidates.")
+    return redirect("recruiters:saved_search_detail", pk=saved.pk)
+class SavedSearchDeleteView(LoginRequiredMixin, DeleteView):
+    model = SavedCandidateSearch
+    template_name = "recruiters/saved_search_confirm_delete.html"
+
+    def get_success_url(self):
+        return reverse("recruiters:saved_search_list")
+
+    def get_queryset(self):
+        return SavedCandidateSearch.objects.filter(
+            recruiter__user=self.request.user
+        )
 
 class RecruiterProfileView(DetailView):
     model = Recruiter

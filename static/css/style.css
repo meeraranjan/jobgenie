@@ -79,6 +79,14 @@ a:hover {
 .btn-outline-primary {
   color: var(--brand-green-dark) !important;
   border-color: var(--brand-green-light) !important;
+  background-color: #fff !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  background-color: var(--brand-green-light) !important;
+  border-color: var(--brand-green-dark) !important;
+  color: var(--brand-green-dark) !important;
 }
 
 /* Forms */
@@ -166,6 +174,13 @@ table.table thead th {
 /* Footer links */
 footer a {
   color: rgba(255, 255, 255, 0.9)
+}
+
+/* Responsive images */
+img.max-width-100 {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 

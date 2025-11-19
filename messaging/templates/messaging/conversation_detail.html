@@ -12,7 +12,7 @@
                 {% endif %}
             </strong>
         </div>
-        <div class="card-body" id="messages-container" style="height:60vh; overflow:auto;"></div>
+        <div class="card-body messages-scroll" id="messages-container"></div>
         <div class="card-footer">
             <form method="post" id="message-form">
                 {% csrf_token %}
@@ -34,18 +34,19 @@
         messagesData.forEach(msg => {
             const isCurrentUser = msg.sender === currentUsername;
             const alignment = isCurrentUser ? 'justify-content-end' : 'justify-content-start';
-            const bgColor = isCurrentUser ? '#0d6efd' : '#f1f1f1';
-            const textColor = isCurrentUser ? 'color:white;' : '';
 
             const msgDiv = document.createElement('div');
             msgDiv.className = `mb-3 d-flex ${alignment}`;
-            msgDiv.innerHTML = `
-                <div class="p-2 rounded" style="max-width:70%; background-color:${bgColor}; ${textColor}">
-                    <div class="small fw-bold">${msg.sender_display || msg.sender}</div>
-                    <div>${msg.body.replace(/\n/g, '<br>')}</div>
-                    <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString()}</div>
-                </div>
+
+            const inner = document.createElement('div');
+            inner.className = `message-bubble ${isCurrentUser ? 'me' : 'them'}`;
+            inner.innerHTML = `
+                <div class="small fw-bold">${msg.sender_display || msg.sender}</div>
+                <div>${msg.body.replace(/\n/g, '<br>')}</div>
+                <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString()}</div>
             `;
+
+            msgDiv.appendChild(inner);
             messagesContainer.appendChild(msgDiv);
         });
     }

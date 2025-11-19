@@ -2,17 +2,181 @@
   background: url("/static/img/background.jpeg") no-repeat fixed;
   background-size: 100% auto;
 }
+
 body {
-    font-family: 'Poppins', sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
+/* Theme variables */
+:root {
+  --brand-green: #59b759;
+  --brand-green-dark: #18551a;
+  --brand-green-light: #c7f0a8;
+  --muted: #6c757d;
+  --card-bg: #ffffff;
+  --surface: #f7fbf6;
+  --text-color: #0b2e12;
+}
+
+/* Global tweaks */
+html,
+body {
+  background: var(--surface);
+  color: var(--text-color);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  color: var(--brand-green-dark);
+}
+
+a {
+  color: var(--brand-green-dark);
+}
+
+a:hover {
+  color: var(--brand-green);
+  text-decoration: none
+}
+
+/* Navbar styling */
+.navbar-dark.bg-dark {
+  background: linear-gradient(90deg, var(--brand-green-dark), #13320f) !important;
+}
+
+.navbar .nav-link {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.navbar .nav-link.active {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px
+}
+
+.navbar .nav-link:hover {
+  color: var(--brand-green-light)
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--brand-green) !important;
+  border-color: var(--brand-green) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  border-radius: 8px;
+  padding: .5rem .9rem;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: var(--brand-green-dark) !important;
+  border-color: var(--brand-green-dark) !important;
+}
+
+.btn-outline-primary {
+  color: var(--brand-green-dark) !important;
+  border-color: var(--brand-green-light) !important;
+}
+
+/* Forms */
+input.form-control,
+textarea.form-control,
+select.form-control {
+  border: 1px solid #dfeee0;
+  border-radius: 8px;
+  padding: .6rem .8rem;
+  background: #fff;
+}
+
+input.form-control:focus,
+textarea.form-control:focus,
+select.form-control:focus {
+  outline: none;
+  border-color: var(--brand-green-dark);
+  box-shadow: 0 0 0 4px rgba(89, 183, 89, 0.08);
+}
+
+/* Cards and surfaces */
+.card {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(13, 33, 10, 0.06);
+}
+
+.card-header {
+  background: linear-gradient(90deg, rgba(89, 183, 89, 0.12), rgba(24, 85, 26, 0.06));
+  border-bottom: none
+}
+
+/* Tables */
+table.table thead th {
+  background: rgba(24, 85, 26, 0.06);
+  color: var(--brand-green-dark)
+}
+
+/* Badges */
+.badge.bg-primary {
+  background: var(--brand-green) !important;
+  color: #fff
+}
+
+/* Messaging UI tweaks */
+#messages-container .mb-3.d-flex {
+  padding-left: 8px;
+  padding-right: 8px
+}
+
+.message-bubble {
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 75%
+}
+
+.message-bubble.me {
+  background: var(--brand-green);
+  color: #fff;
+  margin-left: auto
+}
+
+.message-bubble.them {
+  background: #eef7ea;
+  color: var(--text-color);
+  margin-right: auto
+}
+
+/* Scrollable messages container used by conversation detail */
+.messages-scroll {
+  height: 60vh;
+  overflow: auto;
+  padding: 1rem
+}
+
+/* List group tweaks for inbox */
+.list-group-item {
+  border-radius: 8px;
+  margin-bottom: 8px
+}
+
+.list-group-item .small.text-muted {
+  color: var(--muted)
+}
+
+/* Footer links */
+footer a {
+  color: rgba(255, 255, 255, 0.9)
+}
+
+
 .navbar-brand {
-    font-size: 1.4rem;
-    letter-spacing: 1px;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
 }
 
 footer a:hover {
-    color: #0d6efd; /* Bootstrap blue on hover */
+  color: #0d6efd;
+  /* Bootstrap blue on hover */
 }
 
 .profile-view h2,

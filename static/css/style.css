@@ -9,7 +9,7 @@ body {
 
 /* Theme variables */
 :root {
-  --brand-green: #59b759;
+  --brand-green: #78D07F;
   --brand-green-dark: #18551a;
   --brand-green-light: #c7f0a8;
   --muted: #6c757d;
@@ -64,7 +64,7 @@ a:hover {
 .btn-primary {
   background-color: var(--brand-green) !important;
   border-color: var(--brand-green) !important;
-  color: #fff !important;
+  color: #000000 !important;
   box-shadow: none !important;
   border-radius: 8px;
   padding: .5rem .9rem;
@@ -129,6 +129,9 @@ table.table thead th {
   background: var(--brand-green) !important;
   color: #fff
 }
+.bg-brand {
+  background: var(--brand-green) !important;
+}
 
 /* Messaging UI tweaks */
 #messages-container .mb-3.d-flex {
@@ -174,6 +177,10 @@ table.table thead th {
 /* Footer links */
 footer a {
   color: rgba(255, 255, 255, 0.9)
+}
+
+footer h5 {
+    color: var(--brand-green) !important;
 }
 
 /* Responsive images */

@@ -21,10 +21,17 @@
               {% endif %}
             </div>
           </div>
+           <div class="d-flex align-items-center gap-2">
+
+            <span class="badge {% if s.new_count > 0 %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ s.new_count }} new
+            </span>
+
           <a href="{% url 'recruiters:saved_search_delete' s.pk %}"
              class="btn btn-sm btn-outline-danger">
             Delete
           </a>
+          </div>
         </li>
       {% endfor %}
     </ul>

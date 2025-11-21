@@ -54,14 +54,15 @@
             {% if job_recommendations %}
               <ul class="list-group list-group-flush">
                 {% for profile, score in job_recommendations %}
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                  <a href="{% url 'profiles:jobseeker_detail' profile.pk %}"
+                  class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                     <div>
                       <div class="fw-semibold">{{ profile.first_name }} {{ profile.last_name }}</div>
                       <div class="text-muted small">{{ profile.headline }}</div>
                       <div class="text-muted small">{{ profile.skills|truncatechars:120 }}</div>
                     </div>
                     <span class="badge bg-primary rounded-pill">{{ score|floatformat:0 }}% match</span>
-                  </li>
+                  </a>
                 {% endfor %}
               </ul>
             {% else %}

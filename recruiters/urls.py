@@ -4,7 +4,7 @@ from .views import (
     RecruiterSignupView, RecruiterDashboardView, BecomeRecruiterView,
     update_status, RecruiterApplicationDetailView, CandidateSearchView,
     RecruiterProfileView, RecruiterEditView,
-    SavedSearchListView, SavedSearchDetailView, SavedSearchDeleteView,
+    SavedSearchListView, SavedSearchDetailView,
     save_candidate_search, email_saved_search_matches,
 )
 
@@ -30,11 +30,7 @@ urlpatterns = [
         SavedSearchDetailView.as_view(),
         name="saved_search_detail",
     ),
-    path(
-        "saved-searches/<int:pk>/delete/",
-        SavedSearchDeleteView.as_view(),
-        name="saved_search_delete",
-    ),
+    path("saved-searches/<int:pk>/delete/", views.delete_saved_search, name="saved_search_delete"),
     path(
         "candidates/save-search/",
         save_candidate_search,

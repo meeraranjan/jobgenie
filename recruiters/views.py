@@ -412,7 +412,31 @@ class SavedSearchListView(LoginRequiredMixin, ListView):
             return SavedCandidateSearch.objects.none()
         return recruiter.saved_searches.order_by("-created_at")
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        searches = ctx["saved_searches"]
 
+        results = []
+        for s in searches:
+            parsed = parse_qs(s.query_string, keep_blank_values=True)
+            params = {k: (v[0] if v else "") for k, v in parsed.items()}
+
+            base_qs = JobSeekerProfile.objects.filter(is_public=True)
+
+            qs = apply_candidate_filters(base_qs, params)
+
+            # Count new matches
+            if s.last_run_at:
+                new_count = qs.filter(user__date_joined__gt=s.last_run_at).count()
+            else:
+                # If never run, show total count as "new"
+                new_count = qs.count()
+
+            s.new_count = new_count
+            results.append(s)
+
+        ctx["saved_searches"] = results
+        return ctx
 class SavedSearchDetailView(LoginRequiredMixin, ListView):
     model = JobSeekerProfile
     template_name = "recruiters/saved_search_detail.html"
@@ -513,17 +537,22 @@ def email_saved_search_matches(request, pk):
 
     messages.success(request, "Email sent with new matching candidates.")
     return redirect("recruiters:saved_search_detail", pk=saved.pk)
-class SavedSearchDeleteView(LoginRequiredMixin, DeleteView):
-    model = SavedCandidateSearch
-    template_name = "recruiters/saved_search_confirm_delete.html"
 
-    def get_success_url(self):
-        return reverse("recruiters:saved_search_list")
+@login_required
+def delete_saved_search(request, pk):
+    recruiter = request.user.recruiter_profile
 
-    def get_queryset(self):
-        return SavedCandidateSearch.objects.filter(
-            recruiter__user=self.request.user
-        )
+    saved = get_object_or_404(
+        SavedCandidateSearch,
+        pk=pk,
+        recruiter=recruiter
+    )
+
+    saved_name = saved.name
+    saved.delete()
+
+    messages.success(request, f"Deleted saved search '{saved_name}'.")
+    return redirect("recruiters:saved_search_list")
 
 class RecruiterProfileView(DetailView):
     model = Recruiter

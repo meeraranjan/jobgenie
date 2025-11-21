@@ -30,10 +30,17 @@
   {% if candidates %}
     <ul class="list-group">
       {% for c in candidates %}
-        <li class="list-group-item d-flex justify-content-between align-items-center
-            {% if new_since and c.created_at > new_since %} list-group-item-success{% endif %}">
+        <a href="{% url 'profiles:jobseeker_detail' c.pk %}"
+          class="list-group-item list-group-item-action d-flex justify-content-between align-items-center
+          {% if new_since and c.created_at > new_since %} list-group-item-success{% endif %}">
           <div>
-            <strong>{{ c.user.get_full_name|default:c.user.username }}</strong><br>
+            <strong>
+              {% if c.first_name and c.first_name != "Unknown" or c.last_name and c.last_name != "Unknown" %}
+                  {{ c.first_name }} {{ c.last_name }}
+              {% else %}
+                  {{ c.user.username }}
+              {% endif %}
+          </strong>
             <span class="small text-muted">
               {{ c.city }}{% if c.state %}, {{ c.state }}{% endif %}
               {% if c.country %}, {{ c.country }}{% endif %}
@@ -47,7 +54,7 @@
               Joined {{ c.created_at|date:"M j, Y" }}
             </span>
           {% endif %}
-        </li>
+        </a>
       {% endfor %}
     </ul>
   {% else %}

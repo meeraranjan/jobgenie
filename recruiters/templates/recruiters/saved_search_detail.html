@@ -8,9 +8,9 @@
 
   <div class="d-flex justify-content-between align-items-center mb-2">
     <h2 class="mb-0">{{ saved_search.name }}</h2>
-    <a href="{% url 'recruiters:saved_search_email' saved_search.pk %}"
-       class="btn btn-sm btn-outline-primary">
-      Email me new matches
+    <a href="{% url 'recruiters:email_all_saved_searches' saved_search.pk %}"
+      class="btn btn-sm btn-outline-success">
+      Email all matches
     </a>
   </div>
 

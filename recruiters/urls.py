@@ -5,7 +5,7 @@ from .views import (
     update_status, RecruiterApplicationDetailView, CandidateSearchView,
     RecruiterProfileView, RecruiterEditView,
     SavedSearchListView, SavedSearchDetailView,
-    save_candidate_search, email_saved_search_matches,
+    save_candidate_search, email_all_saved_searches,
 )
 
 app_name = "recruiters"
@@ -17,6 +17,8 @@ urlpatterns = [
     path("become/", BecomeRecruiterView.as_view(), name="become_recruiter"),
     path("update_status/<int:app_id>/<str:new_status>/", update_status, name="update_status"),
     path('email/<int:application_id>/', views.send_candidate_email, name='send_candidate_email'),
+    path('send-email/candidate/<int:candidate_id>/', views.send_candidate_email, name='send_candidate_email'),
+
     path("application/<int:pk>/", RecruiterApplicationDetailView.as_view(), name="application_detail"),
     path("profile/edit/", RecruiterEditView.as_view(), name="edit_profile"),
     path("profile/<str:username>/", RecruiterProfileView.as_view(), name="profile"),
@@ -36,10 +38,15 @@ urlpatterns = [
         save_candidate_search,
         name="save_candidate_search",
     ),
+    # path(
+    #     "saved-searches/<int:pk>/email/",
+    #     email_saved_search_matches,
+    #     name="saved_search_email",
+    # ),
     path(
-        "saved-searches/<int:pk>/email/",
-        email_saved_search_matches,
-        name="saved_search_email",
+        "saved-searches/<int:pk>/email-all/",
+        views.email_all_saved_searches,
+        name="email_all_saved_searches",
     ),
 ]
 

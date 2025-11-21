@@ -52,7 +52,7 @@
       </style>
 
       <div class="d-grid gap-2 mt-3">
-        <button type="submit" class="btn btn-dark">
+        <button type="submit" class="btn btn-primary">
           {% if object %} Update Job {% else %} Post Job {% endif %}
         </button>
         {% if user.is_authenticated and user.userprofile.role == 'RECRUITER' %}

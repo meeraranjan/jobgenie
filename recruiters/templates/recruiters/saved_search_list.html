@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Saved Candidate Searches</h2>
+  <p class="text-muted">Click a search to run it and see current matches.</p>
+
+  {% if saved_searches %}
+    <ul class="list-group">
+      {% for s in saved_searches %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <a href="{% url 'recruiters:saved_search_detail' s.pk %}">
+              {{ s.name }}
+            </a>
+            <div class="small text-muted">
+              Created {{ s.created_at|date:"M j, Y H:i" }}
+              {% if s.last_run_at %}
+                • Last checked {{ s.last_run_at|timesince }} ago
+              {% else %}
+                • Never checked for new matches
+              {% endif %}
+            </div>
+          </div>
+           <div class="d-flex align-items-center gap-2">
+
+            <span class="badge {% if s.new_count > 0 %}bg-success{% else %}bg-secondary{% endif %}">
+                {{ s.new_count }} new
+            </span>
+
+          <a href="{% url 'recruiters:saved_search_delete' s.pk %}"
+             class="btn btn-sm btn-outline-danger">
+            Delete
+          </a>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-light border mt-3">
+      You have no saved searches yet. Run a candidate search and click
+      <strong>“Save this search”</strong>.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -17,9 +17,11 @@
     {% endif %}
 
     <div class="d-flex justify-content-end mb-3">
-        <button class="btn btn-secondary me-2" disabled>Message (coming soon)</button>
-
-    <a href="{% url 'recruiters:send_candidate_email' application.id %}" 
+    <a href="{% url 'messaging:start_conversation' application.candidate.username %}" 
+       class="btn btn-primary me-2">
+       Message
+    </a>
+    <a href="{% url 'recruiters:send_candidate_email' application_id=application.id %}" 
       class="btn btn-success"
       style="background-color: #28a745; border-color: #28a745;">
       Email Candidate

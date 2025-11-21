@@ -336,12 +336,30 @@ def save_candidate_search(request):
     messages.success(request, f"Saved search '{name}'.")
     return redirect("recruiters:saved_search_list")
 
-def send_candidate_email(request, application_id):
-    application = get_object_or_404(Application, id=application_id)
-    candidate = application.candidate
+@login_required
+def send_candidate_email(request, candidate_id=None, application_id=None):
+    """
+    Send email to a candidate.
+    Can be used for:
+      - a candidate with an application (application_id)
+      - any public job seeker (candidate_id)
+    """
+
+    # Get candidate & profile
+    if application_id:
+        from jobs.models import Application
+        application = get_object_or_404(Application, id=application_id)
+        candidate = application.candidate
+    elif candidate_id:
+        candidate = get_object_or_404(JobSeekerProfile, id=candidate_id).user
+        application = None
+    else:
+        messages.error(request, "No candidate specified.")
+        return redirect("profiles:jobseeker_list")
+
     profile = JobSeekerProfile.objects.filter(user=candidate).first()
 
-    # --- Recipient name ---
+    # Recipient name
     if profile and (profile.first_name or profile.last_name):
         recipient_name = f"{profile.first_name or ''} {profile.last_name or ''}".strip()
     elif candidate.get_full_name():
@@ -349,41 +367,42 @@ def send_candidate_email(request, application_id):
     else:
         recipient_name = candidate.username
 
-    # --- Recipient email ---
+    # Recipient email
     recipient_email = profile.email if profile and profile.email else candidate.email
     if not recipient_email:
-        messages.error(request, f"{recipient_name} has not provided an email address. Try messaging instead.")
-        return redirect('recruiters:application_detail', pk=application.id)
+        messages.error(request, f"{recipient_name} has not provided an email address.")
+        return redirect("profiles:jobseeker_list")
 
-    # --- Read and encode logo ---
+    # Read logo
     logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'logo.png')
     logo_data_uri = ""
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as img_file:
-            logo_base64 = base64.b64encode(img_file.read()).decode("utf-8")
-            logo_data_uri = f"data:image/png;base64,{logo_base64}"
+            logo_data_uri = f"data:image/png;base64,{base64.b64encode(img_file.read()).decode()}"
 
     if request.method == 'POST':
-        subject_input = request.POST.get('subject')
-        message_body = request.POST.get('message')
-        
-        job = application.job
-        company_name = job.company_name or "Unknown Company"
+        subject_input = request.POST.get('subject') or "JobGenie Message"
+        message_body = request.POST.get('message') or ""
 
-        # 👇 This is the inbox subject (caption)
-        email_subject = f"JobGenie - Regarding your application for {job.title} from {company_name}"
+        # Optional: if sending for a job application, include job info
+        email_subject = subject_input
+        if application:
+            job = application.job
+            company_name = job.company_name or "Unknown Company"
+            email_subject = f"JobGenie - Regarding your application for {job.title} from {company_name}"
 
-        # 👇 These go into the HTML email body
         context = {
-            'company_name': company_name,
-            'header_title': subject_input or "Application Update",  # subheader inside email
-            'message_body': message_body,
+            "company_name": company_name if application else "",
+            "header_title": subject_input,
+            "message_body": message_body,
+            "logo_data_uri": logo_data_uri,
         }
 
-        html_message = render_to_string('recruiters/email_template.html', context)
+        from django.template.loader import render_to_string
+        html_message = render_to_string("recruiters/email_template.html", context)
 
         email = EmailMultiAlternatives(
-            subject=email_subject,  # shown in inbox
+            subject=email_subject,
             body=message_body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to=[recipient_email],
@@ -392,15 +411,14 @@ def send_candidate_email(request, application_id):
         email.send()
 
         messages.success(request, f"Email sent to {recipient_name} successfully!")
-        return redirect('recruiters:application_detail', pk=application.id)
+        return redirect("profiles:jobseeker_list")
 
     # GET: render email form
-    return render(request, 'recruiters/send_email.html', {
-        'candidate': candidate,
-        'application': application,
-        'display_name_clean': recipient_name,
+    return render(request, "recruiters/send_email.html", {
+        "candidate": candidate,
+        "application": application,
+        "display_name_clean": recipient_name,
     })
-
 class SavedSearchListView(LoginRequiredMixin, ListView):
     model = SavedCandidateSearch
     template_name = "recruiters/saved_search_list.html"
@@ -476,67 +494,56 @@ class SavedSearchDetailView(LoginRequiredMixin, ListView):
         return ctx
 
 @login_required
-def email_saved_search_matches(request, pk):
+def email_all_saved_searches(request, pk):
     recruiter = getattr(request.user, "recruiter_profile", None)
     if recruiter is None:
         messages.error(request, "Only recruiters can email saved search matches.")
         return redirect("recruiters:saved_search_list")
 
-    saved = get_object_or_404(
-        SavedCandidateSearch,
-        pk=pk,
-        recruiter=recruiter
-    )
+    # Get only the saved search with the given pk
+    saved = get_object_or_404(SavedCandidateSearch, pk=pk, recruiter=recruiter)
 
-    base_qs = (
-        JobSeekerProfile.objects
-        .filter(is_public=True)
-        .order_by("last_name", "first_name")
-    )
+    # Apply the saved search filters
+    base_qs = JobSeekerProfile.objects.filter(is_public=True).order_by("last_name", "first_name")
     parsed = parse_qs(saved.query_string, keep_blank_values=True)
     params = {k: (v[0] if v else "") for k, v in parsed.items()}
     qs = apply_candidate_filters(base_qs, params)
 
-    if saved.last_run_at:
-        qs = qs.filter(user__date_joined__gt=saved.last_run_at)
-
     candidates = list(qs)
-
     if not candidates:
-        messages.info(request, "No new candidates since your last run for this search.")
-        return redirect("recruiters:saved_search_detail", pk=saved.pk)
+        messages.info(request, f"No candidates match saved search '{saved.name}'.")
+        return redirect("recruiters:saved_search_list")
 
-    subject = f"JobGenie: new candidates for '{saved.name}'"
-    from_email = settings.DEFAULT_FROM_EMAIL
+    # Determine recipient email
     to_email = [request.user.email] if request.user.email else []
+    if not to_email and recruiter.contact_email:
+        to_email = [recruiter.contact_email]
 
     if not to_email:
-        messages.error(
+        messages.warning(
             request,
-            "You don't have an email address on your account. "
-            "Add one in your profile to receive notifications."
+            f"You don't have an email address to send saved search '{saved.name}'. Skipping."
         )
-        return redirect("recruiters:saved_search_detail", pk=saved.pk)
+        return redirect("recruiters:saved_search_list")
 
+    # Prepare and send email
+    subject = f"JobGenie: candidates for '{saved.name}'"
     html_body = render_to_string(
         "recruiters/saved_search_email.html",
-        {
-            "saved_search": saved,
-            "candidates": candidates,
-        },
+        {"saved_search": saved, "candidates": candidates},
     )
 
     email = EmailMultiAlternatives(
         subject=subject,
-        body="New candidates match your saved search.",
-        from_email=from_email,
+        body="Candidates match your saved search.",
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=to_email,
     )
     email.attach_alternative(html_body, "text/html")
     email.send()
 
-    messages.success(request, "Email sent with new matching candidates.")
-    return redirect("recruiters:saved_search_detail", pk=saved.pk)
+    messages.success(request, f"Email sent for saved search '{saved.name}' with {len(candidates)} candidates.")
+    return redirect("recruiters:saved_search_list")
 
 @login_required
 def delete_saved_search(request, pk):

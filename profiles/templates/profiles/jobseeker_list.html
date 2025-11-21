@@ -73,8 +73,8 @@
         name: "{{ p.first_name }} {{ p.last_name }}",
             headline: "{{ p.headline|escapejs }}",
                 url: "{% url 'profiles:jobseeker_detail' p.pk %}",
-                    lat: { { p.lat } },
-        lng: { { p.lng } }
+                    lat: {{ p.lat }},
+                    lng: {{ p.lng }}
     },
     {% endif %}
     {% endfor %}
